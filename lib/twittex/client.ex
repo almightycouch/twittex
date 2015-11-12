@@ -120,6 +120,7 @@ defmodule Twittex.Client do
     end
   end
 
+  @doc false
   defmacro __using__(_options) do
     quote do
       def start_link(options \\ []) do
