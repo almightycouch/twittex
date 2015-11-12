@@ -56,6 +56,7 @@ defmodule Twittex.API do
   an OAuth access token. Once the access token is retrieved, the application should
   dispose of the login and password corresponding to the user.
   """
+  @spec get_token(String.t, String.t, Keyword.t) :: {:ok, OAuth1.Credentials.t} | {:error, HTTPoison.Error.t}
   def get_token(username, password, options \\ []) do
     # build basic OAuth1 credentials
     credentials = OAuth1.credentials([
@@ -81,6 +82,18 @@ defmodule Twittex.API do
   end
 
   @doc """
+  Same as `get_token/3` but raises `HTTPoison.Error` if an error occurs during the
+  request.
+  """
+  @spec get_token!(String.t, String.t, Keyword.t) :: OAuth2.AccessToken.t
+  def get_token!(username, password, options \\ []) do
+    case get_token(username, password, options) do
+      {:ok, token} -> token
+      {:error, error} -> raise error
+    end
+  end
+
+  @doc """
   Request an application-only authentication token.
 
   Returns `{:ok, token}` if the request is successful, `{:error, reason}` otherwise.
@@ -89,6 +102,7 @@ defmodule Twittex.API do
   authenticated user and this means that any request to API for endpoints that
   require user context, such as posting tweets, will not work.
   """
+  @spec get_token(Keyword.t) :: {:ok, OAuth2.AccessToken.t} | {:error, OAuth2.Error.t}
   def get_token(options \\ []) do
     # build basic OAuth2 client credentials
     client = OAuth2.Client.new([
@@ -111,20 +125,10 @@ defmodule Twittex.API do
   end
 
   @doc """
-  Same as `get_token/3` but raises `HTTPoison.Error` if an error occurs during the
-  request.
-  """
-  def get_token!(username, password, options \\ []) do
-    case get_token(username, password, options) do
-      {:ok, token} -> token
-      {:error, error} -> raise error
-    end
-  end
-
-  @doc """
   Same as `get_token/1` but raises `OAuth2.Error` if an error occurs during the
   request.
   """
+  @spec get_token!(Keyword.t) :: OAuth2.AccessToken.t
   def get_token!(options \\ []) do
     case get_token(options) do
       {:ok, token} -> token

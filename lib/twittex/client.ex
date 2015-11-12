@@ -42,6 +42,7 @@ defmodule Twittex.Client do
 
   Other options are passed to `GenServer._start_link/1`.
   """
+  @spec start_link(Keyword.t) :: GenServer.on_start
   def start_link(options \\ []) do
     {username, options} = Keyword.pop(options, :username)
     {password, options} = Keyword.pop(options, :password)
@@ -61,6 +62,7 @@ defmodule Twittex.Client do
 
   See `Twitter.API.request/5` for more detailed information.
   """
+  @spec get(pid, String.t, HTTPoison.headers, Keyword.t) :: {:ok, HTTPoison.Resonse.t} | {:error, HTTPoison.Error.t}
   def get(pid, url, headers \\ [], options \\ []) do
     GenServer.call(pid, {:get, url, "", headers, options})
   end
@@ -69,6 +71,7 @@ defmodule Twittex.Client do
   Same as `get/4` but raises `HTTPoison.Error` if an error occurs during the
   request.
   """
+  @spec get!(pid, String.t, HTTPoison.headers, Keyword.t) :: HTTPoison.Resonse.t
   def get!(pid, url, headers \\ [], options \\ []) do
     case get(pid, url, headers, options) do
       {:ok, result} -> result
@@ -84,6 +87,7 @@ defmodule Twittex.Client do
 
   See `Twitter.API.request/5` for more detailed information.
   """
+  @spec post(pid, String.t, binary, HTTPoison.headers, Keyword.t) :: {:ok, HTTPoison.Response.t} | {:error, HTTPoison.Error.t}
   def post(pid, url, body \\ [], headers \\ [], options \\ []) do
     GenServer.call(pid, {:post, url, body, headers, options})
   end
@@ -92,6 +96,7 @@ defmodule Twittex.Client do
   Same as `post/5` but raises `HTTPoison.Error` if an error occurs during the
   request.
   """
+  @spec post!(pid, String.t, binary, HTTPoison.headers, Keyword.t) :: HTTPoison.Response.t
   def post!(pid, url, body, headers \\ [], options \\ []) do
     case post(pid, url, body, headers, options) do
       {:ok, result} -> result
