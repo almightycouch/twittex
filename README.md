@@ -1,10 +1,15 @@
 # Twittex
 
-**TODO: Add description**
+Twitter client library for Elixir.
+
+It provides support for both OAuth1.0 and OAuth2.0 authentication protocols.
+
+This mean that you can access the Twitter RESTful API either with the
+[Application-only authentication](https://dev.twitter.com/oauth/application-only)
+or with [xAuth](https://dev.twitter.com/oauth/xauth). The latter requires user
+credentials to log with.
 
 ## Installation
-
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed as:
 
   1. Add twittex to your list of dependencies in `mix.exs`:
 
