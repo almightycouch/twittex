@@ -66,6 +66,17 @@ defmodule Twittex.Client do
   end
 
   @doc """
+  Same as `get/4` but raises `HTTPoison.Error` if an error occurs during the
+  request.
+  """
+  def get!(pid, url, headers \\ [], options \\ []) do
+    case get(pid, url, headers, options) do
+      {:ok, result} -> result
+      {:error, error} -> raise error
+    end
+  end
+
+  @doc """
   Issues a POST request to the given url.
 
   Returns `{:ok, response}` if the request is successful, `{:error, reason}`
@@ -75,6 +86,17 @@ defmodule Twittex.Client do
   """
   def post(pid, url, body \\ [], headers \\ [], options \\ []) do
     GenServer.call(pid, {:post, url, body, headers, options})
+  end
+
+  @doc """
+  Same as `post/5` but raises `HTTPoison.Error` if an error occurs during the
+  request.
+  """
+  def post!(pid, url, body, headers \\ [], options \\ []) do
+    case post(pid, url, body, headers, options) do
+      {:ok, result} -> result
+      {:error, error} -> raise error
+    end
   end
 
   def init(nil) do
@@ -108,8 +130,16 @@ defmodule Twittex.Client do
         Twittex.Client.get(__MODULE__, url, headers, options)
       end
 
+      defp get!(url, headers \\ [], options \\ []) do
+        Twittex.Client.get!(__MODULE__, url, headers, options)
+      end
+
       defp post(url, body \\ [], headers \\ [], options \\ []) do
         Twittex.Client.post(__MODULE__, url, body, headers, options)
+      end
+
+      defp post!(url, body \\ [], headers \\ [], options \\ []) do
+        Twittex.Client.post!(__MODULE__, url, body, headers, options)
       end
     end
   end
