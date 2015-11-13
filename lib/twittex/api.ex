@@ -8,7 +8,7 @@ defmodule Twittex.API do
   others using a relative url pointing to the API endpoint. For example:
 
       > API.get! "/search/tweets.json?q=%23myelixirstatus"
-      %HTTPoison.Response{...}
+      %HTTPoison.Response{}
 
   ## Authentication
 
@@ -22,7 +22,7 @@ defmodule Twittex.API do
   and `get_token/3`. Here, a brief example:
 
       > token = API.get_token!
-      %OAuth2.AccessToken{...}
+      %OAuth2.AccessToken{}
 
   With `Application-only authentication` you don’t have the context of an
   authenticated user and this means that any request to API for endpoints that
@@ -34,7 +34,7 @@ defmodule Twittex.API do
   This can be done by passing an OAuth token as a value of the `:auth` option:
 
       > API.get! "/statuses/home_timeline.json", [], auth: token
-      %HTTPoison.Response{...}
+      %HTTPoison.Response{}
   """
 
   use HTTPoison.Base
@@ -85,7 +85,7 @@ defmodule Twittex.API do
   Same as `get_token/3` but raises `HTTPoison.Error` if an error occurs during the
   request.
   """
-  @spec get_token!(String.t, String.t, Keyword.t) :: OAuth2.AccessToken.t
+  @spec get_token!(String.t, String.t, Keyword.t) :: OAuth1.Credentials.t
   def get_token!(username, password, options \\ []) do
     case get_token(username, password, options) do
       {:ok, token} -> token
