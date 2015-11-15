@@ -26,7 +26,7 @@ defmodule Twittex.Client.Base do
 
   And this is how you may use it:
 
-      > TwitterBot.search "#myelixirstatus", count: 3
+      iex> TwitterBot.search "#myelixirstatus", count: 3
       {:ok, %{}}
   """
 
@@ -128,6 +128,10 @@ defmodule Twittex.Client.Base do
   @doc false
   defmacro __using__(_options) do
     quote do
+      @doc """
+      Starts the process linked to the current process.
+      """
+      @spec start_link(Keyword.t) :: GenServer.on_start
       def start_link(options \\ []) do
         Twittex.Client.Base.start_link(Dict.put_new(options, :name, __MODULE__))
       end

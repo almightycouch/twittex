@@ -7,7 +7,7 @@ defmodule Twittex.API do
   You can use `head/3`, `get/3`, `post/4`, `put/4`, `patch/4`, `delete/3` and
   others using a relative url pointing to the API endpoint. For example:
 
-      > API.get! "/search/tweets.json?q=%23myelixirstatus"
+      iex> API.get! "/search/tweets.json?q=%23myelixirstatus"
       %HTTPoison.Response{}
 
   ## Authentication
@@ -15,16 +15,16 @@ defmodule Twittex.API do
   Under the hood, the `Twittex.API` module uses `HTTPoison.Base` and overrides the
   `request/5` method to add support for following OAuth authentication method:
 
-  * `xAuth` authentication with user credentials.
-  * `Application-only authentication` based on the OAuth 2 specification.
+  * [xAuth] authentication with user credentials.
+  * [Application-only authentication] based on the OAuth 2 specification.
 
   To request an access token with one of the method listed above. See `get_token/1`
   and `get_token/3`. Here, a brief example:
 
-      > token = API.get_token!
+      iex> token = API.get_token!
       %OAuth2.AccessToken{}
 
-  With `Application-only authentication` you don’t have the context of an
+  With [Application-only authentication] you don’t have the context of an
   authenticated user and this means that any request to API for endpoints that
   require user context, such as posting tweets, will not work.
 
@@ -33,8 +33,12 @@ defmodule Twittex.API do
 
   This can be done by passing an OAuth token as a value of the `:auth` option:
 
-      > API.get! "/statuses/home_timeline.json", [], auth: token
+      iex> API.get! "/statuses/home_timeline.json", [], auth: token
       %HTTPoison.Response{}
+
+
+  [xAuth]: https://dev.twitter.com/oauth/xauth
+  [Application-only authentication]: https://dev.twitter.com/oauth/application-only
   """
 
   use HTTPoison.Base
@@ -48,13 +52,15 @@ defmodule Twittex.API do
   @api_secret Application.get_env(:twittex, :consumer_secret)
 
   @doc """
-  Request a user specific (`xAuth`) authentication token.
+  Request a user specific ([xAuth]) authentication token.
 
   Returns `{:ok, token}` if the request is successful, `{:error, reason}` otherwise.
 
-  `xAuth` provides a way for applications to exchange a username and password for
+  [xAuth] provides a way for applications to exchange a username and password for
   an OAuth access token. Once the access token is retrieved, the application should
   dispose of the login and password corresponding to the user.
+
+  [xAuth]: https://dev.twitter.com/oauth/xauth
   """
   @spec get_token(String.t, String.t, Keyword.t) :: {:ok, OAuth1.Credentials.t} | {:error, HTTPoison.Error.t}
   def get_token(username, password, options \\ []) do
@@ -94,13 +100,15 @@ defmodule Twittex.API do
   end
 
   @doc """
-  Request an application-only authentication token.
+  Request an [Application-only authentication] token.
 
   Returns `{:ok, token}` if the request is successful, `{:error, reason}` otherwise.
 
-  With `Application-only authentication` you don’t have the context of an
+  With [Application-only authentication] you don’t have the context of an
   authenticated user and this means that any request to API for endpoints that
   require user context, such as posting tweets, will not work.
+
+  [Application-only authentication]: https://dev.twitter.com/oauth/application-only
   """
   @spec get_token(Keyword.t) :: {:ok, OAuth2.AccessToken.t} | {:error, OAuth2.Error.t}
   def get_token(options \\ []) do
