@@ -14,7 +14,7 @@ credentials to login with.
   1. Add twittex to your list of dependencies in `mix.exs`:
 
         def deps do
-          [{:twittex, "~> 0.0.1"}]
+          [{:twittex, "~> 0.0.2"}]
         end
 
   2. Ensure twittex is started before your application:
