@@ -62,7 +62,7 @@ defmodule Twittex.Client.Base do
 
   See `Twitter.API.request/5` for more detailed information.
   """
-  @spec get(pid, String.t, Twittex.API.headers, Keyword.t) :: {:ok, HTTPoison.Response.t | HTTPoison.AsyncResponse.t} | {:error, HTTPoison.Error.t}
+  @spec get(pid, String.t, Twittex.API.headers, Keyword.t) :: {:ok, %{}} | {:error, HTTPoison.Error.t}
   def get(pid, url, headers \\ [], options \\ []) do
     GenServer.call(pid, {:get, url, "", headers, options})
   end
@@ -71,7 +71,7 @@ defmodule Twittex.Client.Base do
   Same as `get/4` but raises `HTTPoison.Error` if an error occurs during the
   request.
   """
-  @spec get!(pid, String.t, Twittex.API.headers, Keyword.t) :: HTTPoison.Response.t | HTTPoison.AsyncResponse.t
+  @spec get!(pid, String.t, Twittex.API.headers, Keyword.t) :: %{}
   def get!(pid, url, headers \\ [], options \\ []) do
     case get(pid, url, headers, options) do
       {:ok, result} -> result
@@ -87,7 +87,7 @@ defmodule Twittex.Client.Base do
 
   See `Twitter.API.request/5` for more detailed information.
   """
-  @spec post(pid, String.t, binary, Twittex.API.headers, Keyword.t) :: {:ok, HTTPoison.Response.t | HTTPoison.AsyncResponse.t} | {:error, HTTPoison.Error.t}
+  @spec post(pid, String.t, binary, Twittex.API.headers, Keyword.t) :: {:ok, %{}} | {:error, HTTPoison.Error.t}
   def post(pid, url, body \\ [], headers \\ [], options \\ []) do
     GenServer.call(pid, {:post, url, body, headers, options})
   end
@@ -96,7 +96,7 @@ defmodule Twittex.Client.Base do
   Same as `post/5` but raises `HTTPoison.Error` if an error occurs during the
   request.
   """
-  @spec post!(pid, String.t, binary, Twittex.API.headers, Keyword.t) :: HTTPoison.Response.t | HTTPoison.AsyncResponse.t
+  @spec post!(pid, String.t, binary, Twittex.API.headers, Keyword.t) :: %{}
   def post!(pid, url, body, headers \\ [], options \\ []) do
     case post(pid, url, body, headers, options) do
       {:ok, result} -> result
