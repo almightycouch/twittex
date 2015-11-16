@@ -163,12 +163,13 @@ defmodule Twittex.API do
 
     # call HTTPoison.request/5
     case super(method, url, body, headers, options) do
-      {:ok, %HTTPoison.Response{status_code: status} = response} when status in 200..299 ->
-        # decode body depending on the content-type
-        {:ok, struct(response, body: process_response_body(response.body, response.headers))}
-      {:ok, response} ->
-        # reject bad status codes
-        {:error, %HTTPoison.Error{reason: "Bad status code #{response.status_code}"}}
+      {:ok, %HTTPoison.Response{status_code: status_code, headers: headers, body: body} = response} ->
+        body = process_response_body(body, headers)
+        if status_code in 200..299 do
+          {:ok, struct(response, body: body)}
+        else
+          {:error, %HTTPoison.Error{reason: body}}
+        end
       {:error, error} ->
         {:error, error}
     end
