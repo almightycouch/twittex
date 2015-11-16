@@ -168,7 +168,12 @@ defmodule Twittex.API do
         if status_code in 200..299 do
           {:ok, struct(response, body: body)}
         else
-          {:error, %HTTPoison.Error{reason: body}}
+          case body do
+            %{"errors" => [%{"message" => reason}]} ->
+              {:error, %HTTPoison.Error{reason: reason}}
+            reason ->
+              {:error, %HTTPoison.Error{reason: reason}}
+          end
         end
       {:error, error} ->
         {:error, error}
