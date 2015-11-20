@@ -36,4 +36,4 @@ See the [online documentation](https://hexdocs.pm/twittex/) for more information
 ## Usage
 
     iex> Twittex.Client.search "#myelixirstatus"
-    %{}
+    {:ok, %{}}
