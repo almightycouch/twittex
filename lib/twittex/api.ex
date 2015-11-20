@@ -175,6 +175,8 @@ defmodule Twittex.API do
               {:error, %HTTPoison.Error{reason: reason}}
           end
         end
+      {:ok, %HTTPoison.AsyncResponse{} = async_response} ->
+        {:ok, async_response}
       {:error, error} ->
         {:error, error}
     end

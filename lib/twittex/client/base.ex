@@ -120,7 +120,8 @@ defmodule Twittex.Client.Base do
 
   def handle_call({method, url, body, headers, options}, _from, token) do
     case Twittex.API.request(method, url, body, headers, [{:auth, token} | options]) do
-      {:ok, response} -> {:reply, {:ok, response.body}, token}
+      {:ok, %HTTPoison.Response{body: body}} -> {:reply, {:ok, body}, token}
+      {:ok, response} -> {:reply, {:ok, response}, token}
       {:error, error} -> {:reply, {:error, error}, token}
     end
   end

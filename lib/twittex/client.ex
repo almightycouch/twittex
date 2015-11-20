@@ -51,4 +51,36 @@ defmodule Twittex.Client do
   def retweets_of_me(options \\ []) do
     get "/statuses/retweets_of_me.json?" <> URI.encode_query(options)
   end
+
+  def stream(track) do
+    post("https://stream.twitter.com/1.1/statuses/filter.json?delimited=length&track=#{track}", "", [], stream_to: self())
+    Stream.resource(
+      fn -> nil end,
+      fn _ ->
+        stream_next
+      end,
+      &(&1)
+    )
+  end
+
+  defp stream_next(buffer \\ "", length \\ 0) do
+      receive do
+        %HTTPoison.AsyncChunk{chunk: chunk} ->
+          chunk_size = String.length(chunk)
+          cond do
+            length == 0 ->
+              [size, chunk] = String.split(chunk, "\r\n", parts: 2)
+              stream_next(chunk, String.to_integer(size) - String.length(chunk) - 1)
+            length == chunk_size ->
+              {[Poison.decode!(buffer <> chunk)], nil}
+            length > chunk_size ->
+              stream_next(buffer <> chunk, length - chunk_size)
+            length < chunk_size ->
+              raise "oops, reading ahead of chunk"
+              #{[buffer <> String.slice(chunk, 0, length)], nil}
+          end
+        _ ->
+          {[], nil}
+      end
+  end
 end
