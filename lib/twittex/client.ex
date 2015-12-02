@@ -7,9 +7,6 @@ defmodule Twittex.Client do
 
   @doc """
   Returns a collection of relevant Tweets matching the given `query`.
-
-  For more informations about this function, see [Twitter's Search API
-  documentation](https://dev.twitter.com/rest/public/search).
   """
   @spec search(String.t, Keyword.t) :: {:ok, %{}} | {:error, HTTPoison.Error.t}
   def search(query, options \\ []) do
@@ -52,35 +49,36 @@ defmodule Twittex.Client do
     get "/statuses/retweets_of_me.json?" <> URI.encode_query(options)
   end
 
-  def stream(track) do
-    post("https://stream.twitter.com/1.1/statuses/filter.json?delimited=length&track=#{track}", "", [], stream_to: self())
-    Stream.resource(
-      fn -> nil end,
-      fn _ ->
-        stream_next
-      end,
-      &(&1)
-    )
+  @doc """
+  Returns a `GenEvent.Stream` that consume Tweets from a Twitter streaming
+  endpoint.
+  """
+  @spec stream(String.t, Keyword.t) :: {:ok, GenEvent.Stream.t} | {:error, HTTPoison.Error.t}
+  def stream(query, options \\ []) do
+    {:ok, listener} = GenEvent.start_link()
+    case post "https://stream.twitter.com/1.1/statuses/filter.json?" <> URI.encode_query(Dict.merge(%{track: query, delimited: "length"}, options)), "", [], stream_to: spawn(fn -> stream_loop(listener) end) do
+      {:ok, %HTTPoison.AsyncResponse{}} -> {:ok, GenEvent.stream(listener)}
+      {:error, error} -> {:error, error}
+    end
   end
 
-  defp stream_next(buffer \\ "", length \\ 0) do
-      receive do
-        %HTTPoison.AsyncChunk{chunk: chunk} ->
-          chunk_size = String.length(chunk)
-          cond do
-            length == 0 ->
-              [size, chunk] = String.split(chunk, "\r\n", parts: 2)
-              stream_next(chunk, String.to_integer(size) - String.length(chunk) - 1)
-            length == chunk_size ->
-              {[Poison.decode!(buffer <> chunk)], nil}
-            length > chunk_size ->
-              stream_next(buffer <> chunk, length - chunk_size)
-            length < chunk_size ->
-              raise "oops, reading ahead of chunk"
-              #{[buffer <> String.slice(chunk, 0, length)], nil}
-          end
-        _ ->
-          {[], nil}
-      end
+  defp stream_loop(listener, buffer \\ "", size \\ 0) do
+    receive do
+      %HTTPoison.AsyncChunk{chunk: chunk} ->
+        chunk_size = String.length(chunk)
+        cond do
+          size == 0 ->
+            [size, chunk] = String.split(chunk, "\r\n", parts: 2)
+            stream_loop(listener, chunk, String.to_integer(size) - String.length(chunk) - 1)
+          size > chunk_size ->
+            stream_loop(listener, buffer <> chunk, size - chunk_size)
+          size < chunk_size ->
+            raise "Oops, reading ahead of chunk"
+          size == chunk_size ->
+            GenEvent.ack_notify(listener, Poison.decode!(buffer <> chunk))
+        end
+      _ -> :noop
+    end
+    stream_loop(listener)
   end
 end
