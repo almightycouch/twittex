@@ -56,9 +56,13 @@ defmodule Twittex.Client do
   @spec stream(String.t, Keyword.t) :: {:ok, GenEvent.Stream.t} | {:error, HTTPoison.Error.t}
   def stream(query, options \\ []) do
     {:ok, listener} = GenEvent.start_link()
-    case post "https://stream.twitter.com/1.1/statuses/filter.json?" <> URI.encode_query(Dict.merge(%{track: query, delimited: "length"}, options)), "", [], stream_to: spawn(fn -> stream_loop(listener) end) do
-      {:ok, %HTTPoison.AsyncResponse{}} -> {:ok, GenEvent.stream(listener)}
-      {:error, error} -> {:error, error}
+    stream_url = "https://stream.twitter.com/1.1/statuses/filter.json?" <> URI.encode_query(Dict.merge(%{track: query, delimited: "length"}, options))
+    case post stream_url, "", [], stream_to: spawn(fn -> stream_loop(listener) end) do
+      {:ok, %HTTPoison.AsyncResponse{id: id}} ->
+        GenEvent.add_handler(listener, Twittex.Client.StreamHandler, id)
+        {:ok, GenEvent.stream(listener)}
+      {:error, error} ->
+        {:error, error}
     end
   end
 
