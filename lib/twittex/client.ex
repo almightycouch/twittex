@@ -14,12 +14,30 @@ defmodule Twittex.Client do
   end
 
   @doc """
+  Same as `search/2` but raises `HTTPoison.Error` if an error occurs during the
+  request.
+  """
+  @spec search!(String.t, Keyword.t) :: %{}
+  def search!(query, options \\ []) do
+    get! "/search/tweets.json?" <> URI.encode_query(Dict.merge(%{q: query}, options))
+  end
+
+  @doc """
   Returns the 20 most recent mentions (tweets containing a users’s `@screen_name`)
   for the authenticating user.
   """
   @spec mentions_timeline(Keyword.t) :: {:ok, %{}} | {:error, HTTPoison.Error.t}
   def mentions_timeline(options \\ []) do
     get "/statuses/mentions_timeline.json?" <> URI.encode_query(options)
+  end
+
+  @doc """
+  Same as `mentions_timeline/1` but raises `HTTPoison.Error` if an error occurs during the
+  request.
+  """
+  @spec mentions_timeline!(Keyword.t) :: %{}
+  def mentions_timeline!(options \\ []) do
+    get! "/statuses/mentions_timeline.json?" <> URI.encode_query(options)
   end
 
   @doc """
@@ -32,6 +50,15 @@ defmodule Twittex.Client do
   end
 
   @doc """
+  Same as `user_timeline/2` but raises `HTTPoison.Error` if an error occurs during the
+  request.
+  """
+  @spec user_timeline!(String.t, Keyword.t) :: %{}
+  def user_timeline!(screen_name, options \\ []) do
+    get! "/statuses/user_timeline.json?" <> URI.encode_query(Dict.merge(%{screen_name: screen_name}, options))
+  end
+
+  @doc """
   Returns a collection of the most recent Tweets and retweets posted by the
   authenticating user and the users they follow.
   """
@@ -41,12 +68,30 @@ defmodule Twittex.Client do
   end
 
   @doc """
+  Same as `home_timeline/1` but raises `HTTPoison.Error` if an error occurs during the
+  request.
+  """
+  @spec home_timeline!(Keyword.t) :: %{}
+  def home_timeline!(options \\ []) do
+    get! "/statuses/home_timeline.json?" <> URI.encode_query(options)
+  end
+
+  @doc """
   Returns the most recent tweets authored by the authenticating user that have been
   retweeted by others.
   """
   @spec retweets_of_me(Keyword.t) :: {:ok, %{}} | {:error, HTTPoison.Error.t}
   def retweets_of_me(options \\ []) do
     get "/statuses/retweets_of_me.json?" <> URI.encode_query(options)
+  end
+
+  @doc """
+  Same as `retweets_of_me/1` but raises `HTTPoison.Error` if an error occurs during the
+  request.
+  """
+  @spec retweets_of_me!(Keyword.t) :: %{}
+  def retweets_of_me!(options \\ []) do
+    get! "/statuses/retweets_of_me.json?" <> URI.encode_query(options)
   end
 
   @doc """
@@ -63,6 +108,18 @@ defmodule Twittex.Client do
         {:ok, GenEvent.stream(listener)}
       {:error, error} ->
         {:error, error}
+    end
+  end
+
+  @doc """
+  Same as `stream/2` but raises `HTTPoison.Error` if an error occurs during the
+  request.
+  """
+  @spec stream!(String.t, Keyword.t) :: GenEvent.Stream.t
+  def stream!(query, options \\ []) do
+    case stream(query, options) do
+      {:ok, stream} -> stream
+      {:error, error} -> raise error
     end
   end
 
