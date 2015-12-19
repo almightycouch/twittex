@@ -1,4 +1,6 @@
 defmodule Twittex.Client.StreamHandler do
+  @moduledoc false
+
   use GenEvent
 
   def init(id) do
