@@ -6,7 +6,7 @@ defmodule Twittex.Mixfile do
   def project do
     [app: :twittex,
      version: @version,
-     elixir: "~> 1.1",
+     elixir: "~> 1.3",
      package: package,
      description: description,
      build_embedded: Mix.env == :prod,
@@ -39,9 +39,10 @@ defmodule Twittex.Mixfile do
   end
 
   defp deps do
-    [{:oauth2, "~> 0.5"},
-     {:oauther, "~> 1.0.1"},
-     {:ex_doc, "~> 0.10", only: :dev},
+    [{:oauth2, "~> 0.6"},
+     {:httpoison, "~> 0.9"},
+     {:oauther, "~> 1.0"},
+     {:ex_doc, "~> 0.12", only: :dev},
      {:earmark, ">= 0.0.0", only: :dev}]
   end
 end

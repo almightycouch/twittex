@@ -146,20 +146,28 @@ defmodule Twittex.API do
 
   def request(method, url, body \\ "", headers \\ [], options \\ []) do
     # make url absolute
-    unless URI.parse(url).scheme do
-      url = @api_url <> "/#{@api_version}" <> url
-    end
+    url =
+      unless URI.parse(url).scheme do
+        url = @api_url <> "/#{@api_version}" <> url
+      else
+        url
+      end
 
     # if available, inject authentication header
-    if Keyword.has_key?(options, :auth) do
-      {auth, options} = Keyword.pop(options, :auth)
-      headers = [case auth do
-        %OAuth2.AccessToken{} = token ->
-          {"Authorization", "#{token.token_type} #{token.access_token}"}
-        %OAuth1.Credentials{} = credentials ->
-          OAuth1.sign(to_string(method), url, [], credentials) |> OAuth1.header |> elem(0)
-      end | headers]
-    end
+    {headers, options} =
+      if Keyword.has_key?(options, :auth) do
+        {auth, options} = Keyword.pop(options, :auth)
+        oauth =
+          case auth do
+            %OAuth2.AccessToken{} = token ->
+              {"Authorization", "#{token.token_type} #{token.access_token}"}
+            %OAuth1.Credentials{} = credentials ->
+              OAuth1.sign(to_string(method), url, [], credentials) |> OAuth1.header |> elem(0)
+          end
+        {[oauth|headers], options}
+      else
+        {headers, options}
+      end
 
     # call HTTPoison.request/5
     case super(method, url, body, headers, options) do
@@ -184,15 +192,15 @@ defmodule Twittex.API do
 
   defp process_response_body(body, headers) do
     import OAuth2.Util, only: [content_type: 1]
-
     case content_type(headers) do
       "application/json" ->
         Poison.decode!(body)
       "text/javascript" ->
         Poison.decode!(body)
       "application/x-www-form-urlencoded" ->
-        URI.decode_query!(body)
-      _ ->body
+        URI.decode_query(body)
+      _ ->
+        body
     end
   end
 end
