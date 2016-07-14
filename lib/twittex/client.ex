@@ -102,7 +102,7 @@ defmodule Twittex.Client do
   def stream(query, options \\ []) do
     {:ok, listener} = GenEvent.start_link()
     stream_url = "https://stream.twitter.com/1.1/statuses/filter.json?" <> URI.encode_query(Dict.merge(%{track: query, delimited: "length"}, options))
-    case post stream_url, "", [], stream_to: spawn(fn -> stream_loop(listener) end) do
+    case post stream_url, "", [], stream_to: spawn_link(fn -> stream_loop(listener) end) do
       {:ok, %HTTPoison.AsyncResponse{id: id}} ->
         GenEvent.add_handler(listener, Twittex.Client.StreamHandler, id)
         {:ok, GenEvent.stream(listener)}
