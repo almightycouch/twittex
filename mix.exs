@@ -1,10 +1,11 @@
 defmodule Twittex.Mixfile do
   use Mix.Project
 
-  @version "0.0.4"
+  @version "0.1.0"
 
   def project do
     [app: :twittex,
+     name: "Twittex",
      version: @version,
      elixir: "~> 1.3",
      package: package,
