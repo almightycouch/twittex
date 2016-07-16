@@ -95,17 +95,30 @@ defmodule Twittex.Client do
   end
 
   @doc """
-  Returns a `GenEvent.Stream` that consume Tweets from a Twitter streaming
-  endpoint.
+  Returns a stream that consumes Tweets from a Twitter streaming endpoint.
   """
-  @spec stream(String.t, Keyword.t) :: {:ok, GenEvent.Stream.t} | {:error, HTTPoison.Error.t}
+  @spec stream(String.t, Keyword.t) :: {:ok, Enumerable.t} | {:error, HTTPoison.Error.t}
   def stream(query, options \\ []) do
-    {:ok, listener} = GenEvent.start_link()
+    {dispatcher, options} = Keyword.pop(options, :dispatcher, :gen_stage)
+    {stream_fun, stream_opts} =
+      case dispatcher do
+        :gen_event ->
+          {:ok, pid} = GenEvent.start_link()
+          {fn ref ->
+            GenEvent.add_handler(pid, Twittex.Client.StreamHandler, ref)
+            GenEvent.stream(pid)
+           end, stream_to: spawn_link(fn -> stream_loop(pid) end)}
+        :gen_stage ->
+          {:ok, pid} = Twittex.Client.Stream.start_link()
+          {fn _ref ->
+            Experimental.GenStage.stream([pid])
+           end, hackney: [stream_to: pid, async: :once]}
+      end
+
     stream_url = "https://stream.twitter.com/1.1/statuses/filter.json?" <> URI.encode_query(Dict.merge(%{track: query, delimited: "length"}, options))
-    case post stream_url, "", [], stream_to: spawn_link(fn -> stream_loop(listener) end) do
+    case post stream_url, "", [], stream_opts ++ [recv_timeout: :infinity] do
       {:ok, %HTTPoison.AsyncResponse{id: id}} ->
-        GenEvent.add_handler(listener, Twittex.Client.StreamHandler, id)
-        {:ok, GenEvent.stream(listener)}
+        {:ok, stream_fun.(id)}
       {:error, error} ->
         {:error, error}
     end
