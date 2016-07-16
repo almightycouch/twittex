@@ -99,26 +99,9 @@ defmodule Twittex.Client do
   """
   @spec stream(String.t, Keyword.t) :: {:ok, Enumerable.t} | {:error, HTTPoison.Error.t}
   def stream(query, options \\ []) do
-    {dispatcher, options} = Keyword.pop(options, :dispatcher, :gen_stage)
-    {stream_fun, stream_opts} =
-      case dispatcher do
-        :gen_event ->
-          {:ok, pid} = GenEvent.start_link()
-          {fn ref ->
-            GenEvent.add_handler(pid, Twittex.Client.StreamHandler, ref)
-            GenEvent.stream(pid)
-           end, stream_to: spawn_link(fn -> stream_loop(pid) end)}
-        :gen_stage ->
-          {:ok, pid} = Twittex.Client.Stream.start_link()
-          {fn _ref ->
-            Experimental.GenStage.stream([pid])
-           end, hackney: [stream_to: pid, async: :once]}
-      end
-
-    stream_url = "https://stream.twitter.com/1.1/statuses/filter.json?" <> URI.encode_query(Dict.merge(%{track: query, delimited: "length"}, options))
-    case post stream_url, "", [], stream_opts ++ [recv_timeout: :infinity] do
-      {:ok, %HTTPoison.AsyncResponse{id: id}} ->
-        {:ok, stream_fun.(id)}
+    case stage :post, "https://stream.twitter.com/1.1/statuses/filter.json?" <> URI.encode_query(Dict.merge(%{track: query, delimited: "length"}, options)) do
+      {:ok, stage} ->
+        {:ok, Experimental.GenStage.stream([stage])}
       {:error, error} ->
         {:error, error}
     end
@@ -128,31 +111,13 @@ defmodule Twittex.Client do
   Same as `stream/2` but raises `HTTPoison.Error` if an error occurs during the
   request.
   """
-  @spec stream!(String.t, Keyword.t) :: GenEvent.Stream.t
+  @spec stream(String.t, Keyword.t) :: Enumerable.t
   def stream!(query, options \\ []) do
     case stream(query, options) do
-      {:ok, stream} -> stream
-      {:error, error} -> raise error
+      {:ok, stream} ->
+        stream
+      {:error, error} ->
+        raise error
     end
-  end
-
-  defp stream_loop(listener, buffer \\ "", size \\ 0) do
-    receive do
-      %HTTPoison.AsyncChunk{chunk: chunk} ->
-        chunk_size = String.length(chunk)
-        cond do
-          size == 0 ->
-            [size, chunk] = String.split(chunk, "\r\n", parts: 2)
-            stream_loop(listener, chunk, String.to_integer(size) - String.length(chunk) - 1)
-          size > chunk_size ->
-            stream_loop(listener, buffer <> chunk, size - chunk_size)
-          size < chunk_size ->
-            raise "Oops, reading ahead of chunk"
-          size == chunk_size ->
-            GenEvent.ack_notify(listener, Poison.decode!(buffer <> chunk))
-        end
-      _ -> :noop
-    end
-    stream_loop(listener)
   end
 end

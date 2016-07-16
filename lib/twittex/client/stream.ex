@@ -16,6 +16,7 @@ defmodule Twittex.Client.Stream do
   end
 
   def handle_demand(demand, state) do
+    :hackney.stream_next(state.ref)
     {:noreply, [], %__MODULE__{state | demand: state.demand + demand}}
   end
 
@@ -28,8 +29,8 @@ defmodule Twittex.Client.Stream do
     end
   end
 
-  def handle_info({:hackney_response, ref, {:headers, _headers}}, state) do
-    :hackney.stream_next(ref)
+  def handle_info({:hackney_response, _ref, {:headers, _headers}}, state) do
+    :hackney.stream_next(state.ref)
     {:noreply, [], state}
   end
 
@@ -37,24 +38,24 @@ defmodule Twittex.Client.Stream do
     {:stop, reason, state}
   end
 
-  def handle_info({:hackney_response, ref, chunk}, state) when is_binary(chunk) do
+  def handle_info({:hackney_response, _ref, chunk}, state) when is_binary(chunk) do
     chunk_size = String.length(chunk)
     cond do
       state.buffer_size == 0 ->
         [size, chunk] = String.split(chunk, "\r\n", parts: 2)
-        :hackney.stream_next(ref)
+        :hackney.stream_next(state.ref)
         {:noreply, [], %__MODULE__{state | buffer: chunk, buffer_size: String.to_integer(size) - String.length(chunk) - 1}}
       state.buffer_size > chunk_size ->
-        :hackney.stream_next(ref)
+        :hackney.stream_next(state.ref)
         {:noreply, [], %__MODULE__{state | buffer: state.buffer <> chunk, buffer_size: state.buffer_size - chunk_size}}
       state.buffer_size == chunk_size ->
         event = Poison.decode!(state.buffer <> chunk)
-        if state.demand > 1, do: :hackney.stream_next(ref)
-        {:noreply, [event], %__MODULE__{state | buffer: "", buffer_size: 0, demand: state.demand - 1}}
+        if state.demand > 1, do: :hackney.stream_next(state.ref)
+        {:noreply, [event], %__MODULE__{state | buffer: "", buffer_size: 0, demand: max(0, state.demand - 1)}}
     end
   end
 
-  def terminate(reason, state) do
+  def terminate(_reason, state) do
     :hackney.stop_async(state.ref)
   end
 end

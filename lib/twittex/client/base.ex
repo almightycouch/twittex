@@ -3,10 +3,7 @@ defmodule Twittex.Client.Base do
   A behaviour module for implementing your own Twitter client.
 
   It implements the `GenServer` behaviour, and keeps the authentication state
-  during the entire process livetime.  If the server dies, and is part of a
-  supervisor tree, it will restart with the same token.
-
-  See `get/4` and `post/5` for more detailed informations.
+  during the entire process livetime.
 
   ## Example
 
@@ -104,6 +101,36 @@ defmodule Twittex.Client.Base do
     end
   end
 
+  @doc """
+  Issues a request to the given url and stream data via a GenStage producer.
+
+  Returns `{:ok, stage}` if the request is successful, `{:error, reason}`
+  otherwise.
+  """
+  @spec stage(pid, Atom.t, String.t, binary, Twittex.API.headers, Keyword.t) :: {:ok, Enumerable.t} | {:error, HTTPoison.Error.t}
+  def stage(pid, method, url, body \\ [], headers \\ [], options \\ []) do
+    {:ok, stage} = Twittex.Client.Stream.start_link()
+    options = Keyword.merge(options, hackney: [stream_to: stage, async: :once], recv_timeout: :infinity)
+    case GenServer.call(pid, {method, url, body, headers, options}) do
+      {:ok, %HTTPoison.AsyncResponse{}} ->
+        {:ok, stage}
+      {:error, error} ->
+        {:error, error}
+    end
+  end
+
+  @doc """
+  Same as `stage/6` but raises `HTTPoison.Error` if an error occurs during the
+  request.
+  """
+  @spec stage!(pid, Atom.t, String.t, binary, Twittex.API.headers, Keyword.t) :: Enumerable.t
+  def stage!(pid, method, url, body, headers \\ [], options \\ []) do
+    case stage(pid, method, url, body, headers, options) do
+      {:ok, result} -> result
+      {:error, error} -> raise error
+    end
+  end
+
   def init(nil) do
     case Twittex.API.get_token() do
       {:ok, token} -> {:ok, token}
@@ -151,6 +178,14 @@ defmodule Twittex.Client.Base do
 
       defp post!(url, body \\ [], headers \\ [], options \\ []) do
         Twittex.Client.Base.post!(__MODULE__, url, body, headers, options)
+      end
+
+      defp stage(method, url, body \\ [], headers \\ [], options \\ []) do
+        Twittex.Client.Base.stage(__MODULE__, method, url, body, headers, options)
+      end
+
+      defp stage!(method, url, body \\ [], headers \\ [], options \\ []) do
+        Twittex.Client.Base.stage!(__MODULE__, method, url, body, headers, options)
       end
     end
   end
