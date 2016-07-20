@@ -41,8 +41,8 @@ defmodule Twittex.Client.Base do
   """
   @spec start_link(Keyword.t) :: GenServer.on_start
   def start_link(options \\ []) do
-    {username, options} = Keyword.pop(options, :username)
-    {password, options} = Keyword.pop(options, :password)
+    {username, options} = Keyword.pop(options, :username, Application.get_env(:twittex, :username))
+    {password, options} = Keyword.pop(options, :password, Application.get_env(:twittex, :password))
 
     if username && password do
       GenServer.start_link(__MODULE__, {username, password}, options)
