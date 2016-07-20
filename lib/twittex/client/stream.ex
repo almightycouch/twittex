@@ -20,12 +20,12 @@ defmodule Twittex.Client.Stream do
     {:noreply, [], %__MODULE__{state | demand: state.demand + demand}}
   end
 
-  def handle_info({:hackney_response, ref, {:status, status_code, _body}}, %__MODULE__{ref: nil} = state) do
+  def handle_info({:hackney_response, ref, {:status, status_code, reason}}, %__MODULE__{ref: nil} = state) do
     if status_code in 200..299 do
       :hackney.stream_next(ref)
       {:noreply, [], %__MODULE__{state | ref: ref}}
     else
-      {:stop, "Invalid status code #{status_code}", state}
+      {:stop, reason, state}
     end
   end
 
@@ -37,20 +37,27 @@ defmodule Twittex.Client.Stream do
   def handle_info({:hackney_response, _ref, {:error, reason}}, state) do
     {:stop, reason, state}
   end
+  def handle_info({:hackney_response, _ref, :done}, state) do
+    {:stop, "Connection Closed", state}
+  end
 
   def handle_info({:hackney_response, _ref, chunk}, state) when is_binary(chunk) do
     chunk_size = String.length(chunk)
     cond do
       state.buffer_size == 0 ->
-        [size, chunk] = String.split(chunk, "\r\n", parts: 2)
         :hackney.stream_next(state.ref)
-        {:noreply, [], %__MODULE__{state | buffer: chunk, buffer_size: String.to_integer(size) - String.length(chunk) - 1}}
+        case String.split(chunk, "\r\n", parts: 2) do
+          [size, chunk] ->
+            {:noreply, [], %__MODULE__{state | buffer: chunk, buffer_size: String.to_integer(size) - String.length(chunk) - 1}}
+          _ ->
+            {:noreply, [], state}
+        end
       state.buffer_size > chunk_size ->
         :hackney.stream_next(state.ref)
         {:noreply, [], %__MODULE__{state | buffer: state.buffer <> chunk, buffer_size: state.buffer_size - chunk_size}}
       state.buffer_size == chunk_size ->
-        event = Poison.decode!(state.buffer <> chunk)
         if state.demand > 1, do: :hackney.stream_next(state.ref)
+        event = Poison.decode!(state.buffer <> chunk)
         {:noreply, [event], %__MODULE__{state | buffer: "", buffer_size: 0, demand: max(0, state.demand - 1)}}
     end
   end
