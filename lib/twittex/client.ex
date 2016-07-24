@@ -3,7 +3,9 @@ defmodule Twittex.Client do
   Twitter client implementation, provides helper functions to query the API.
   """
 
-  use Twittex.Client.Base
+  alias Twittex.Client.{Base, Stream}
+
+  use Base
 
   @doc """
   Returns a collection of relevant Tweets matching the given `query`.
@@ -96,12 +98,19 @@ defmodule Twittex.Client do
 
   @doc """
   Returns a stream that consumes Tweets from a Twitter streaming endpoint.
+
+  ## Options
+
+  * `:min_demand` - the minimum demand for this subscription
+  * `:max_demand` - the maximum demand for this subscription
   """
   @spec stream(String.t, Keyword.t) :: {:ok, Enumerable.t} | {:error, HTTPoison.Error.t}
   def stream(query, options \\ []) do
+    {min_demand, options} = Keyword.pop options, :min_demand, 500
+    {max_demand, options} = Keyword.pop options, :max_demand, 1_000
     case stage :post, "https://stream.twitter.com/1.1/statuses/filter.json?" <> URI.encode_query(Dict.merge(%{track: query, delimited: "length"}, options)) do
       {:ok, stage} ->
-        {:ok, Experimental.GenStage.stream([stage])}
+        {:ok, Stream.stream([{stage, [min_demand: min_demand, max_demand: max_demand]}])}
       {:error, error} ->
         {:error, error}
     end
