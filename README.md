@@ -2,7 +2,7 @@
 
 [![Travis](https://img.shields.io/travis/almightycouch/twittex.svg)](https://travis-ci.org/almightycouch/twittex)
 [![Hex.pm](https://img.shields.io/hexpm/v/twittex.svg)](https://hex.pm/packages/twittex)
-[![Documentation Status](https://img.shields.io/badge/docs-doxygen-blue.svg)](http://hexdocs.pm/twittex)
+[![Documentation Status](https://img.shields.io/badge/docs-hexdocs-blue.svg)](http://hexdocs.pm/twittex)
 [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/almightycouch/twittex/master/LICENSE)
 [![Github Issues](https://img.shields.io/github/issues/almightycouch/twittex.svg)](http://github.com/almightycouch/twittex/issues)
 
