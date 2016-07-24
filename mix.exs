@@ -34,7 +34,7 @@ defmodule Twittex.Mixfile do
 
   defp docs do
     [extras: ["README.md"],
-      main: "extra-readme",
+      main: "readme",
       source_ref: "v#{@version}",
       source_url: "https://github.com/almightycouch/twittex"]
   end

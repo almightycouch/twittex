@@ -1,3 +1,6 @@
+[![Travis](https://img.shields.io/travis/almightycouch/twittex.svg)](https://travis-ci.org/almightycouch/twittex) [![Hex.pm](https://img.shields.io/hexpm/v/twittex.svg)](https://hex.pm/
+packages/twittex) [![Hex.pm](https://img.shields.io/hexpm/dt/twittex.svg?maxAge=2592000)](https://hex.pm/packages/twittex)
+
 # Twittex
 
 Twitter client library for Elixir.
@@ -11,7 +14,7 @@ latter requires user credentials to login with.
 
 ## Installation
 
-  1. Add twittex to your list of dependencies in `mix.exs`:
+Add Twittex to your list of dependencies in `mix.exs`:
 
 ```elixir
 def deps do
@@ -19,7 +22,7 @@ def deps do
 end
 ```
 
-  2. Ensure twittex is started before your application:
+Ensure Twittex is started before your application:
 
 ```elixir
 def application do
@@ -27,7 +30,7 @@ def application do
 end
 ```
 
-3. Add your app's `consumer_key` and `consumer_secret` to `config/config.exs`:
+Add your app's `consumer_key` and `consumer_secret` to `config/config.exs`:
 
 ```elixir
 config :twittex,
@@ -66,7 +69,7 @@ iex> Twittex.Client.home_timeline
 Returns a stream that consume Tweets from public data flowing through Twitter:
 
 ```elixir
-iex> {:ok, stream} = Twittex.Client.stream "cop21"
+iex> {:ok, stream} = Twittex.Client.stream "#myelixirstatus"
 {:ok, stream}
 iex> Enum.each stream, &IO.inspect/1
 ```
