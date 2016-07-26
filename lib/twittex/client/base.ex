@@ -128,7 +128,7 @@ defmodule Twittex.Client.Base do
   request.
   """
   @spec stage!(pid, Atom.t, String.t, binary, API.headers, Keyword.t) :: Stream.t
-  def stage!(pid, method, url, body, headers \\ [], options \\ []) do
+  def stage!(pid, method, url, body \\ [], headers \\ [], options \\ []) do
     case stage(pid, method, url, body, headers, options) do
       {:ok, result} -> result
       {:error, error} -> raise error
