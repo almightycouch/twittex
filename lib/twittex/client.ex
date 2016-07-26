@@ -97,7 +97,7 @@ defmodule Twittex.Client do
   end
 
   @doc """
-  Returns a stream that consumes Tweets from a Twitter streaming endpoint.
+  Returns a stream of relevant Tweets matching the given `query`.
 
   ## Options
 
@@ -123,6 +123,41 @@ defmodule Twittex.Client do
   @spec stream(String.t, Keyword.t) :: Enumerable.t
   def stream!(query, options \\ []) do
     case stream(query, options) do
+      {:ok, stream} ->
+        stream
+      {:error, error} ->
+        raise error
+    end
+  end
+
+  @doc """
+  Returns a stream of tweets authored by the authenticating user.
+
+  ## Options
+
+  * `:min_demand` - the minimum demand for this subscription
+  * `:max_demand` - the maximum demand for this subscription
+  """
+  @spec user_stream(Keyword.t) :: {:ok, Enumerable.t} | {:error, HTTPoison.Error.t}
+  def user_stream(options \\ []) do
+    {min_demand, options} = Keyword.pop options, :min_demand, 500
+    {max_demand, options} = Keyword.pop options, :max_demand, 1_000
+
+    case stage :post, "https://userstream.twitter.com/1.1/user.json?" <> URI.encode_query(Dict.merge(%{delimited: "length"}, options)) do
+      {:ok, stage} ->
+        {:ok, Stream.stream([{stage, [min_demand: min_demand, max_demand: max_demand]}])}
+      {:error, error} ->
+        {:error, error}
+    end
+  end
+
+  @doc """
+  Same as `user_stream/2` but raises `HTTPoison.Error` if an error occurs during the
+  request.
+  """
+  @spec user_stream(Keyword.t) :: Enumerable.t
+  def user_stream!(options \\ []) do
+    case user_stream(options) do
       {:ok, stream} ->
         stream
       {:error, error} ->
