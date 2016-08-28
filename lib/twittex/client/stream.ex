@@ -23,13 +23,6 @@ defmodule Twittex.Client.Stream do
   end
 
   @doc """
-  Creates a stream that subscribes to the given stage.
-
-  See `GenStage.stream/1` for more information.
-  """
-  defdelegate stream(stages), to: GenStage
-
-  @doc """
   Stops the stage with the given reason.
 
   See `GenStage.stop/1` for more information.

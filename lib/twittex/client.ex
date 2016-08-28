@@ -2,10 +2,9 @@ defmodule Twittex.Client do
   @moduledoc """
   Twitter client implementation, provides helper functions to query the API.
   """
+  use Twittex.Client.Base
 
-  alias Twittex.Client.{Base, Stream}
-
-  use Base
+  alias Experimental.GenStage
 
   @doc """
   Returns a collection of relevant Tweets matching the given `query`.
@@ -106,11 +105,17 @@ defmodule Twittex.Client do
   """
   @spec stream(String.t, Keyword.t) :: {:ok, Enumerable.t} | {:error, HTTPoison.Error.t}
   def stream(query, options \\ []) do
+    {bare_stage, options} = Keyword.pop options, :stage, false
     {min_demand, options} = Keyword.pop options, :min_demand, 500
     {max_demand, options} = Keyword.pop options, :max_demand, 1_000
+
     case stage :post, "https://stream.twitter.com/1.1/statuses/filter.json?" <> URI.encode_query(Dict.merge(%{track: query, delimited: "length"}, options)) do
       {:ok, stage} ->
-        {:ok, Stream.stream([{stage, [min_demand: min_demand, max_demand: max_demand]}])}
+        if bare_stage do
+          {:ok, stage}
+        else
+          {:ok, GenStage.stream([{stage, [min_demand: min_demand, max_demand: max_demand]}])}
+        end
       {:error, error} ->
         {:error, error}
     end
@@ -120,7 +125,7 @@ defmodule Twittex.Client do
   Same as `stream/2` but raises `HTTPoison.Error` if an error occurs during the
   request.
   """
-  @spec stream(String.t, Keyword.t) :: Enumerable.t
+  @spec stream!(String.t, Keyword.t) :: Enumerable.t
   def stream!(query, options \\ []) do
     case stream(query, options) do
       {:ok, stream} ->
@@ -140,12 +145,17 @@ defmodule Twittex.Client do
   """
   @spec user_stream(Keyword.t) :: {:ok, Enumerable.t} | {:error, HTTPoison.Error.t}
   def user_stream(options \\ []) do
+    {bare_stage, options} = Keyword.pop options, :stage, false
     {min_demand, options} = Keyword.pop options, :min_demand, 500
     {max_demand, options} = Keyword.pop options, :max_demand, 1_000
 
     case stage :post, "https://userstream.twitter.com/1.1/user.json?" <> URI.encode_query(Dict.merge(%{delimited: "length"}, options)) do
       {:ok, stage} ->
-        {:ok, Stream.stream([{stage, [min_demand: min_demand, max_demand: max_demand]}])}
+        if bare_stage do
+          {:ok, stage}
+        else
+          {:ok, GenStage.stream([{stage, [min_demand: min_demand, max_demand: max_demand]}])}
+        end
       {:error, error} ->
         {:error, error}
     end

@@ -43,7 +43,7 @@ defmodule Twittex.Mixfile do
     [{:oauth2, "~> 0.6"},
      {:httpoison, "~> 0.9"},
      {:oauther, "~> 1.0"},
-     {:gen_stage, "~> 0.4"},
+     {:gen_stage, "~> 0.5"},
      {:ex_doc, "~> 0.12", only: :dev},
      {:earmark, ">= 0.0.0", only: :dev}]
   end
