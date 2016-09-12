@@ -60,7 +60,7 @@ defmodule Twittex.Client.Base do
   Returns `{:ok, response}` if the request is successful, `{:error, reason}`
   otherwise.
 
-  See `Twitter.API.request/5` for more detailed information.
+  See `Twittex.API.request/5` for more detailed information.
   """
   @spec get(pid, String.t, API.headers, Keyword.t) :: {:ok, %{}} | {:error, HTTPoison.Error.t}
   def get(pid, url, headers \\ [], options \\ []) do
@@ -85,7 +85,7 @@ defmodule Twittex.Client.Base do
   Returns `{:ok, response}` if the request is successful, `{:error, reason}`
   otherwise.
 
-  See `Twitter.API.request/5` for more detailed information.
+  See `Twittex.API.request/5` for more detailed information.
   """
   @spec post(pid, String.t, binary, API.headers, Keyword.t) :: {:ok, %{}} | {:error, HTTPoison.Error.t}
   def post(pid, url, body \\ [], headers \\ [], options \\ []) do
