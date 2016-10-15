@@ -29,6 +29,13 @@ defmodule Twittex.Classifier do
 
   def train(enum, category, options), do: Enum.reduce(enum, SimpleBayes.init(options), &SimpleBayes.train(&2, category, &1))
 
+  def merge(pids, options \\ []) do
+    pids
+    |> Enum.map(&export_bayes/1)
+    |> Enum.reduce(%SimpleBayes{opts: options}, &merge_bayes/2)
+    |> SimpleBayes.Storage.Memory.init(options)
+  end
+
   #
   # Helpers
   #
