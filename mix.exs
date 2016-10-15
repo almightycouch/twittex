@@ -1,7 +1,7 @@
 defmodule Twittex.Mixfile do
   use Mix.Project
 
-  @version "0.2.1"
+  @version "0.3.0"
 
   def project do
     [app: :twittex,
@@ -17,7 +17,7 @@ defmodule Twittex.Mixfile do
   end
 
   def application do
-    [applications: [:logger, :httpoison, :gen_stage],
+    [applications: [:logger, :httpoison, :gen_stage, :simple_bayes, :stemmer],
      mod: {Twittex, []}]
   end
 
@@ -40,7 +40,9 @@ defmodule Twittex.Mixfile do
   end
 
   defp deps do
-    [{:oauth2, "~> 0.6"},
+    [{:simple_bayes, "~> 0.11"},
+     {:stemmer, "~> 1.0"},
+     {:oauth2, "~> 0.6"},
      {:httpoison, "~> 0.9"},
      {:oauther, "~> 1.0"},
      {:gen_stage, "~> 0.6"},
