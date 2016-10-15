@@ -64,6 +64,13 @@ defmodule Twittex.Classifier do
   end
 
   #
+  # Delegates
+  #
+
+  defdelegate classify(pid, string, opts \\ []),     to: SimpleBayes.Classifier
+  defdelegate classify_one(pid, string, opts \\ []), to: SimpleBayes.Classifier
+
+  #
   # Helpers
   #
 
