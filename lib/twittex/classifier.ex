@@ -6,7 +6,17 @@ defmodule Twittex.Classifier do
   """
 
   @doc """
-  Trains bayes with the given categorized corpus.
+  Trains bayes with both, positive and negative samples.
+  """
+  @spec train_corpora(Keyword.t) :: pid
+  def train_corpora(options \\ []) do
+    ~w(positive negative)a
+    |> Enum.map(&train_corpus(&1, options))
+    |> merge(options)
+  end
+
+  @doc """
+  Trains bayes with the given categorized samples.
   """
   @spec train_corpus(:positive | :negative, Keyword.t) :: pid
   def train_corpus(category, options \\ []) do
@@ -67,14 +77,14 @@ defmodule Twittex.Classifier do
       stop_words: []]
   end
 
-  defp merge_bayes(bayes, acc) do
-    if bayes, do: Map.merge(acc, bayes, &update_bayes/3), else: acc
-  end
-
   defp export_bayes(pid) do
     bayes = Agent.get(pid, & &1)
     Agent.stop(pid)
     bayes
+  end
+
+  defp merge_bayes(bayes, acc) do
+    if bayes, do: Map.merge(acc, bayes, &update_bayes/3), else: acc
   end
 
   defp update_bayes(key, v1, v2) do
@@ -87,9 +97,11 @@ defmodule Twittex.Classifier do
     end
   end
 
-  defp update_bayes_category(_key, v1, v2), do:
+  defp update_bayes_category(_key, v1, v2) do
     Keyword.merge(v1, v2, &update_bayes/3)
+  end
 
-  defp update_bayes_tokens(_key, v1, v2), do:
+  defp update_bayes_tokens(_key, v1, v2) do
     v1 + v2
+  end
 end
