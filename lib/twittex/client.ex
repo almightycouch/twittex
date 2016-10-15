@@ -98,18 +98,28 @@ defmodule Twittex.Client do
   @doc """
   Returns a stream of relevant Tweets matching the given `query`.
 
+  If `query` is set to `:sample`, this function returns a small random sample
+  of all public statuses (roughly 1% of all public Tweets).
+
   ## Options
 
   * `:min_demand` - the minimum demand for this subscription
   * `:max_demand` - the maximum demand for this subscription
   """
-  @spec stream(String.t, Keyword.t) :: {:ok, Enumerable.t} | {:error, HTTPoison.Error.t}
-  def stream(query, options \\ []) do
+  @spec stream(String.t | :sample, Keyword.t) :: {:ok, Enumerable.t} | {:error, HTTPoison.Error.t}
+  def stream(query \\ :sample, options \\ []) do
     {bare_stage, options} = Keyword.pop options, :stage, false
     {min_demand, options} = Keyword.pop options, :min_demand, 500
     {max_demand, options} = Keyword.pop options, :max_demand, 1_000
 
-    case stage :post, "https://stream.twitter.com/1.1/statuses/filter.json?" <> URI.encode_query(Dict.merge(%{track: query, delimited: "length"}, options)) do
+    url =
+      if query == :sample do
+        "https://stream.twitter.com/1.1/statuses/sample.json?" <> URI.encode_query(Dict.merge(%{delimited: "length"}, options))
+      else
+        "https://stream.twitter.com/1.1/statuses/filter.json?" <> URI.encode_query(Dict.merge(%{track: query, delimited: "length"}, options))
+      end
+
+    case stage :post, url do
       {:ok, stage} ->
         if bare_stage do
           {:ok, stage}
@@ -125,8 +135,8 @@ defmodule Twittex.Client do
   Same as `stream/2` but raises `HTTPoison.Error` if an error occurs during the
   request.
   """
-  @spec stream!(String.t, Keyword.t) :: Enumerable.t
-  def stream!(query, options \\ []) do
+  @spec stream!(String.t |:sample, Keyword.t) :: Enumerable.t
+  def stream!(query \\ :sample, options \\ []) do
     case stream(query, options) do
       {:ok, stream} ->
         stream

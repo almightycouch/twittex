@@ -148,7 +148,7 @@ defmodule Twittex.API do
     # make url absolute
     url =
       unless URI.parse(url).scheme do
-        url = @api_url <> "/#{@api_version}" <> url
+        @api_url <> "/#{@api_version}" <> url
       else
         url
       end
