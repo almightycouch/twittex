@@ -5,7 +5,11 @@ defmodule Twittex.Classifier do
   Classifier for natural language processing.
   """
 
-  def train_samples(category, options \\ []) do
+  @doc """
+  Trains bayes with the given categorized corpus.
+  """
+  @spec train_corpus(:positive | :negative, Keyword.t) :: pid
+  def train_corpus(category, options \\ []) do
     :code.priv_dir(:twittex)
     |> Path.join("twitter_samples")
     |> Path.join(Atom.to_string(category) <> "_tweets.json")
@@ -16,6 +20,10 @@ defmodule Twittex.Classifier do
     |> train(category, options)
   end
 
+  @doc """
+  Trains bayes with the given enumerable and category.
+  """
+  @spec train(Enumerable.t, Atom.t, Keyword.t) :: pid
   def train(enum, category, options \\ [])
 
   def train(%Flow{} = flow, category, options) do
@@ -29,6 +37,10 @@ defmodule Twittex.Classifier do
 
   def train(enum, category, options), do: Enum.reduce(enum, SimpleBayes.init(options), &SimpleBayes.train(&2, category, &1))
 
+  @doc """
+  Merges multiples bayes into one.
+  """
+  @spec merge([pid], Keyword.t) :: pid
   def merge(pids, options \\ []) do
     pids
     |> Enum.map(&export_bayes/1)
