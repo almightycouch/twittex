@@ -27,6 +27,7 @@ defmodule Twittex.Classifier do
   def train(enum, category, options \\ [])
 
   def train(%Flow{} = flow, category, options) do
+    options = Keyword.merge(default_options, options)
     flow
     |> Flow.reduce(fn -> SimpleBayes.init(options) end, &SimpleBayes.train(&2, category, &1))
     |> Flow.map_state(&export_bayes/1)
@@ -35,13 +36,17 @@ defmodule Twittex.Classifier do
     |> SimpleBayes.Storage.Memory.init(options)
   end
 
-  def train(enum, category, options), do: Enum.reduce(enum, SimpleBayes.init(options), &SimpleBayes.train(&2, category, &1))
+  def train(enum, category, options) do
+    options = Keyword.merge(default_options, options)
+    Enum.reduce(enum, SimpleBayes.init(options), &SimpleBayes.train(&2, category, &1))
+  end
 
   @doc """
   Merges multiples bayes into one.
   """
   @spec merge([pid], Keyword.t) :: pid
   def merge(pids, options \\ []) do
+    options = Keyword.merge(default_options, options)
     pids
     |> Enum.map(&export_bayes/1)
     |> Enum.reduce(%SimpleBayes{opts: options}, &merge_bayes/2)
@@ -52,14 +57,24 @@ defmodule Twittex.Classifier do
   # Helpers
   #
 
-  defp export_bayes(pid) do
-    bayes = Agent.get(pid, & &1)
-    Agent.stop(pid)
-    bayes
+  defp default_options do
+    [model: :binarized_multinomial,
+      storage: :memory,
+      default_weight: 1,
+      smoothing: 0,
+      stem: false,
+      top: nil,
+      stop_words: []]
   end
 
   defp merge_bayes(bayes, acc) do
     if bayes, do: Map.merge(acc, bayes, &update_bayes/3), else: acc
+  end
+
+  defp export_bayes(pid) do
+    bayes = Agent.get(pid, & &1)
+    Agent.stop(pid)
+    bayes
   end
 
   defp update_bayes(key, v1, v2) do
