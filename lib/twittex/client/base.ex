@@ -33,7 +33,7 @@ defmodule Twittex.Client.Base do
   use GenServer
 
   @doc """
-  Starts the process linked to the current process.
+  Starts the process as part of a supervision tree.
 
   ## Options
 
@@ -161,7 +161,7 @@ defmodule Twittex.Client.Base do
   defmacro __using__(_options) do
     quote do
       @doc """
-      Starts the process linked to the current process.
+      Starts the process as part of a supervision tree.
       """
       @spec start_link(Keyword.t) :: GenServer.on_start
       def start_link(options \\ []) do

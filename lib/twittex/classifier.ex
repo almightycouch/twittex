@@ -2,7 +2,7 @@ alias Experimental.Flow
 
 defmodule Twittex.Classifier do
   @moduledoc """
-  Classifier for natural language processing.
+  Conveniences for working with natural language processing and sentiment analysis.
   """
 
   @doc """

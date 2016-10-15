@@ -1,11 +1,6 @@
 defmodule Twittex.Client.Stream do
   @moduledoc """
-  Twitter streaming endpoint.
-
-  It implements a `GenStage` source providing low latency access to Twitter’s
-  global stream of Tweet data.
-
-  See `Twittex.Client.Base.stage/6` for more information.
+  Twitter streaming API stage.
   """
 
   alias Experimental.GenStage
@@ -15,7 +10,7 @@ defmodule Twittex.Client.Stream do
   defstruct ref: nil, demand: 0, buffer: "", buffer_size: 0
 
   @doc """
-  Starts the process linked to the current state.
+  Starts the stage as part of a supervision tree.
   """
   @spec start_link(Keyword.t) :: GenServer.on_start
   def start_link(options \\ []) do
@@ -25,9 +20,13 @@ defmodule Twittex.Client.Stream do
   @doc """
   Stops the stage with the given reason.
 
-  See `GenStage.stop/1` for more information.
+  See `GenStage.stop/3` for more information.
   """
   defdelegate stop(stage, reason \\ :normal, timeout \\ :infinity), to: GenStage
+
+  #
+  # Callbacks
+  #
 
   @doc false
   def init([]) do

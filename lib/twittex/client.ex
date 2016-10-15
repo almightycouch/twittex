@@ -1,6 +1,6 @@
 defmodule Twittex.Client do
   @moduledoc """
-  Twitter client implementation, provides helper functions to query the API.
+  Twitter client.
   """
   use Twittex.Client.Base
 
@@ -103,8 +103,9 @@ defmodule Twittex.Client do
 
   ## Options
 
-  * `:min_demand` - the minimum demand for this subscription
-  * `:max_demand` - the maximum demand for this subscription
+  * `:stage` - Returns the stage pid instead of the stream.
+  * `:min_demand` - Minimum demand for this subscription.
+  * `:max_demand` - Maximum demand for this subscription.
   """
   @spec stream(String.t | :sample, Keyword.t) :: {:ok, Enumerable.t} | {:error, HTTPoison.Error.t}
   def stream(query \\ :sample, options \\ []) do
@@ -113,10 +114,10 @@ defmodule Twittex.Client do
     {max_demand, options} = Keyword.pop options, :max_demand, 1_000
 
     url =
-      if query == :sample do
-        "https://stream.twitter.com/1.1/statuses/sample.json?" <> URI.encode_query(Dict.merge(%{delimited: "length"}, options))
-      else
-        "https://stream.twitter.com/1.1/statuses/filter.json?" <> URI.encode_query(Dict.merge(%{track: query, delimited: "length"}, options))
+      case query do
+        :user   -> "https://userstream.twitter.com/1.1/user.json?" <> URI.encode_query(Dict.merge(%{delimited: "length"}, options))
+        :sample -> "https://stream.twitter.com/1.1/statuses/sample.json?" <> URI.encode_query(Dict.merge(%{delimited: "length"}, options))
+        _       -> "https://stream.twitter.com/1.1/statuses/filter.json?" <> URI.encode_query(Dict.merge(%{track: query, delimited: "length"}, options))
       end
 
     case stage :post, url do
@@ -150,25 +151,13 @@ defmodule Twittex.Client do
 
   ## Options
 
-  * `:min_demand` - the minimum demand for this subscription
-  * `:max_demand` - the maximum demand for this subscription
+  * `:stage` - Returns the stage pid instead of the stream.
+  * `:min_demand` - Minimum demand for this subscription.
+  * `:max_demand` - Maximum demand for this subscription.
   """
   @spec user_stream(Keyword.t) :: {:ok, Enumerable.t} | {:error, HTTPoison.Error.t}
   def user_stream(options \\ []) do
-    {bare_stage, options} = Keyword.pop options, :stage, false
-    {min_demand, options} = Keyword.pop options, :min_demand, 500
-    {max_demand, options} = Keyword.pop options, :max_demand, 1_000
-
-    case stage :post, "https://userstream.twitter.com/1.1/user.json?" <> URI.encode_query(Dict.merge(%{delimited: "length"}, options)) do
-      {:ok, stage} ->
-        if bare_stage do
-          {:ok, stage}
-        else
-          {:ok, GenStage.stream([{stage, [min_demand: min_demand, max_demand: max_demand]}])}
-        end
-      {:error, error} ->
-        {:error, error}
-    end
+    stream(:user, options)
   end
 
   @doc """
