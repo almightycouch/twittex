@@ -34,15 +34,9 @@ defmodule Twittex.Classifier do
   #
 
   defp export_bayes(pid) do
-    case SimpleBayes.save(pid) do
-      {:ok, ^pid, encoded_data} ->
-        encoded_data
-        |> Base.decode64!()
-        |> Code.eval_string()
-        |> elem(0)
-      {:error, _reason} ->
-        nil
-    end
+    bayes = Agent.get(pid, & &1)
+    Agent.stop(pid)
+    bayes
   end
 
   defp merge_bayes(bayes, acc) do
