@@ -79,7 +79,7 @@ defmodule Twittex.Classifier do
       storage: :memory,
       default_weight: 1,
       smoothing: 0,
-      stem: false,
+      stem: &Stemmer.stem/1,
       top: nil,
       stop_words: []]
   end
