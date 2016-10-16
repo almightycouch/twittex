@@ -21,7 +21,6 @@ defmodule Twittex.Classifier do
   @spec train_corpus(:positive | :negative, Keyword.t) :: pid
   def train_corpus(category, options \\ []) do
     :code.priv_dir(:twittex)
-    |> Path.join("twitter_samples")
     |> Path.join(Atom.to_string(category) <> "_tweets.json")
     |> File.stream!(read_ahead: 1_000)
     |> Flow.from_enumerable()
