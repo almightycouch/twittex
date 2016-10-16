@@ -1,15 +1,14 @@
 defmodule Mix.Tasks.InteractiveTraining do
   use Mix.Task
 
-  def run(_args) do
+  def run(args) do
     Application.ensure_all_started(:twittex)
-
     corpora_dir = :code.priv_dir(:twittex)
 
     pos_file = File.open!(Path.join(corpora_dir, "positive_tweets.json"), [:write, :append, :utf8])
     neg_file = File.open!(Path.join(corpora_dir, "negative_tweets.json"), [:write, :append, :utf8])
 
-    Twittex.Client.stream!(:sample, language: "en")
+    Twittex.Client.stream!(List.first(args) || :sample, language: "en")
     |> Stream.each(&interactive_classification(&1, pos_file, neg_file))
     |> Stream.run()
   end
