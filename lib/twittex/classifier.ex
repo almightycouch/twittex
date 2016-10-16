@@ -108,7 +108,7 @@ defmodule Twittex.Classifier do
   defp update_bayes(key, v1, v2) do
     case key do
       :categories          -> Map.merge(v1, v2, &update_bayes_category/3)
-      :tokens              -> Map.merge(v1, v2, &update_bayes_tokens/3)
+      :tokens              -> Map.merge(v1, v2, &update_bayes_token/3)
       :tokens_per_training -> Map.merge(v1, v2)
       :trainings           -> v1 + v2
       _                    -> v1
@@ -119,7 +119,7 @@ defmodule Twittex.Classifier do
     Keyword.merge(v1, v2, &update_bayes/3)
   end
 
-  defp update_bayes_tokens(_key, v1, v2) do
+  defp update_bayes_token(_key, v1, v2) do
     v1 + v2
   end
 end
