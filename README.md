@@ -21,7 +21,7 @@ Add Twittex to your list of dependencies in `mix.exs`:
 
 ```elixir
 def deps do
-  [{:twittex, "~> 0.1"}]
+  [{:twittex, "~> 0.2"}]
 end
 ```
 
