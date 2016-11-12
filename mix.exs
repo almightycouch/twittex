@@ -17,7 +17,7 @@ defmodule Twittex.Mixfile do
   end
 
   def application do
-    [applications: [:logger, :httpoison, :gen_stage, :simple_bayes, :stemmer],
+    [applications: [:logger, :poison, :httpoison, :gen_stage],
      mod: {Twittex, []}]
   end
 
@@ -40,13 +40,12 @@ defmodule Twittex.Mixfile do
   end
 
   defp deps do
-    [{:simple_bayes, "~> 0.11"},
-     {:stemmer, "~> 1.0"},
-     {:oauth2, "~> 0.6"},
-     {:httpoison, "~> 0.9"},
-     {:oauther, "~> 1.0"},
-     {:gen_stage, "~> 0.7"},
-     {:ex_doc, "~> 0.12", only: :dev},
+    [{:poison, "~> 3.0"},
+     {:httpoison, "~> 0.10"},
+     {:oauth2, "~> 0.8"},
+     {:oauther, "~> 1.1"},
+     {:gen_stage, "~> 0.8"},
+     {:ex_doc, "~> 0.14", only: :dev},
      {:earmark, ">= 0.0.0", only: :dev}]
   end
 end

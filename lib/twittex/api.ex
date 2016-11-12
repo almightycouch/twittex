@@ -123,10 +123,13 @@ defmodule Twittex.API do
 
     # request bearer token
     case OAuth2.Client.get_token(client, [], [], options) do
-      {:ok, %OAuth2.AccessToken{other_params: %{"errors" => [%{"message" => error}|_]}}} ->
-        {:error, %OAuth2.Error{reason: error}}
-      {:ok, %OAuth2.AccessToken{access_token: access_token}} ->
-        {:ok, OAuth2.AccessToken.new(access_token, client)}
+      {:ok, %OAuth2.Client{token: token}} ->
+        token =
+          token
+          |> Map.fetch!(:access_token)
+          |> Poison.decode!()
+          |> OAuth2.AccessToken.new()
+        {:ok, token}
       {:error, error} ->
         {:error, error}
     end
