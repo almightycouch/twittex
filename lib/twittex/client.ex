@@ -1,6 +1,18 @@
 defmodule Twittex.Client do
   @moduledoc """
-  Twitter client.
+  Twitter client to work with the Twitter API.
+
+  The client is started as part of the application and authenticates using the defined configuration.
+
+  Basically, this means that once started, your application can use function from this module directly
+  without having to handle supervision or authentication work:
+
+  ```elixir
+  Twitter.Client.search! "#myelixirstatus"
+  ```
+
+  Read the `Twittex.API` documentation for more details on how authentication is implemented.
+
   """
   use Twittex.Client.Base
 
@@ -61,7 +73,7 @@ defmodule Twittex.Client do
 
   @doc """
   Returns a collection of the most recent Tweets and retweets posted by the
-  authenticating user and the users they follow.
+  authenticated user and the users they follow.
   """
   @spec home_timeline(Keyword.t) :: {:ok, %{}} | {:error, HTTPoison.Error.t}
   def home_timeline(options \\ []) do
@@ -78,7 +90,7 @@ defmodule Twittex.Client do
   end
 
   @doc """
-  Returns the most recent tweets authored by the authenticating user that have been
+  Returns the most recent tweets authored by the authenticated user that have been
   retweeted by others.
   """
   @spec retweets_of_me(Keyword.t) :: {:ok, %{}} | {:error, HTTPoison.Error.t}
@@ -98,8 +110,8 @@ defmodule Twittex.Client do
   @doc """
   Returns a stream of relevant Tweets matching the given `query`.
 
-  If `query` is set to `:sample`, this function returns a small random sample
-  of all public statuses (roughly 1% of all public Tweets).
+  If `query` is set to `:sample` (default), this function returns a small random
+  sample of all public statuses (roughly 1% of all public Tweets).
 
   ## Options
 

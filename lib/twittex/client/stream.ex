@@ -1,6 +1,8 @@
 defmodule Twittex.Client.Stream do
   @moduledoc """
-  Twitter streaming API stage.
+  Twitter streaming `GenStage` with back-pressure cababilities.
+
+  See `Twittex.Client.Base.stage/6` and `Twittex.Client.stream/2` for more details.
   """
 
   alias Experimental.GenStage

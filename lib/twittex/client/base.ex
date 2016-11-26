@@ -2,12 +2,12 @@ defmodule Twittex.Client.Base do
   @moduledoc """
   A behaviour module for implementing your own Twitter client.
 
-  It implements the `GenServer` behaviour, and keeps the authentication state
-  during the entire process livetime.
+  It implements the `GenServer` behaviour, authenticates when starting and keeps
+  the authentication token in it state during the entire process livetime.
 
   ## Example
 
-  To create a client, create a new module and `use Twittex.Client.Base` as follow:
+  To create your own client, create a new module and `use Twittex.Client.Base` as follow:
 
       defmodule TwitterBot do
         use Twittex.Client.Base
@@ -21,7 +21,7 @@ defmodule Twittex.Client.Base do
 
       worker(TwitterBot, [])
 
-  And this is how you may use it:
+  And here's how you may use it:
 
       iex> TwitterBot.search "#myelixirstatus", count: 3
       {:ok, %{}}

@@ -8,12 +8,11 @@
 
 Twitter client library for Elixir.
 
-It provides support for both OAuth1.0 and OAuth2.0 authentication protocols.
+It provides support for both *OAuth1.0* and *OAuth2.0* authentication protocols.
 
-This mean that you can access the Twitter RESTful API either with the OAuth2.0
-[Application-only authentication](https://dev.twitter.com/oauth/application-only)
-or with the OAuth1.0 [xAuth](https://dev.twitter.com/oauth/xauth) extension. The
-latter requires user credentials to login with.
+## Documentation
+
+See the [online documentation](https://hexdocs.pm/twittex/) for more information.
 
 ## Installation
 
@@ -37,13 +36,45 @@ Add your app's `consumer_key` and `consumer_secret` to `config/config.exs`:
 
 ```elixir
 config :twittex,
-  consumer_key: "",
-  consumer_secret: ""
+  consumer_key: "3rJOl1ODzm9yZy63FACdg",
+  consumer_secret: "5jPoQ5kQvMJFDYRNE8bQ4rHuds4xJqhvgNJM4awaE8"
 ```
 
-## Documentation
+## Authentication
 
-See the [online documentation](https://hexdocs.pm/twittex/) for more information.
+Twittex supports both *Application-only* and user-credentials (*xAuth*) authentication
+methods.
+
+You should read the Twitter [OAuth](https://dev.twitter.com/oauth) documentation for more details.
+
+Using *Application-only* authentication, your app will be able to, for example:
+
+* Pull user timelines;
+* Access friends and followers of any account;
+* Access lists resources;
+* Search in tweets;
+* Retrieve any user information;
+
+And it won’t be able to:
+
+* Post tweets or other resources;
+* Connect in Streaming endpoints;
+* Search for users;
+* Use any geo endpoint;
+* Access DMs or account credentials;
+
+In order to have the context of an authenticated user and access restricted
+endpoints and features you cannot access with the former method, you will have
+to use the *xAuth* extension.
+
+To do so, simply add your credentials to your application config file:
+
+```elixir
+config :twittex,
+  # consumer key and secret
+  username: "myusername",
+  password: "mypassword"
+```
 
 ## Usage
 

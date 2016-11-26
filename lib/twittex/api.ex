@@ -2,43 +2,41 @@ defmodule Twittex.API do
   @moduledoc """
   Twitter API wrapper.
 
-  Provides convenience functions for working with Twitter's RESTful API.
+  Provides convenience functions for working with Twitter's RESTful API. You can
+  use `head/3`, `get/3`, `post/4`, and others using a relative url pointing to
+  the API endpoint.
 
-  You can use `head/3`, `get/3`, `post/4`, `put/4`, `patch/4`, `delete/3` and
-  others using a relative url pointing to the API endpoint. For example:
+  For example:
 
       iex> API.get! "/search/tweets.json?q=%23myelixirstatus"
       %HTTPoison.Response{}
 
   ## Authentication
 
-  Under the hood, the `Twittex.API` module uses `HTTPoison.Base` and overrides the
-  `request/5` method to add support for following OAuth authentication method:
+  Twittex supports following *OAuth* authentication methods:
 
+  * [Application-only] authentication.
   * [xAuth] authentication with user credentials.
-  * [Application-only authentication] based on the OAuth 2 specification.
 
   To request an access token with one of the method listed above. See `get_token/1`
-  and `get_token/3`. Here, a brief example:
+  and `get_token/3`. Here's, a brief example:
 
       iex> token = API.get_token!
       %OAuth2.AccessToken{}
 
-  With [Application-only authentication] you don’t have the context of an
-  authenticated user and this means that any request to API for endpoints that
-  require user context, such as posting tweets, will not work.
+  Under the hood, the `Twittex.API` module uses `HTTPoison.Base` and overrides the
+  `request/5` method to pass the authentication headers along the request.
 
   Twitter requires clients accessing their API to be authenticated. This means
-  that you must provide an authentication token for each request.
+  that you must provide the authentication token for each and every request.
 
-  This can be done by passing an OAuth token as a value of the `:auth` option:
+  This can be done by passing the *OAuth* token as `:auth` option to the request function:
 
       iex> API.get! "/statuses/home_timeline.json", [], auth: token
       %HTTPoison.Response{}
 
-
   [xAuth]: https://dev.twitter.com/oauth/xauth
-  [Application-only authentication]: https://dev.twitter.com/oauth/application-only
+  [Application-only]: https://dev.twitter.com/oauth/application-only
   """
 
   use HTTPoison.Base
@@ -52,13 +50,12 @@ defmodule Twittex.API do
   @api_secret Application.get_env(:twittex, :consumer_secret)
 
   @doc """
-  Request a user specific ([xAuth]) authentication token.
+  Request a user specific (*xAuth*) authentication token.
+
+  [xAuth] provides a way for applications to exchange a username and password
+  for an *OAuth* access token. It is required when accessing APIs that require user context.
 
   Returns `{:ok, token}` if the request is successful, `{:error, reason}` otherwise.
-
-  [xAuth] provides a way for applications to exchange a username and password for
-  an OAuth access token. Once the access token is retrieved, the application should
-  dispose of the login and password corresponding to the user.
 
   [xAuth]: https://dev.twitter.com/oauth/xauth
   """
@@ -100,15 +97,14 @@ defmodule Twittex.API do
   end
 
   @doc """
-  Request an [Application-only authentication] token.
+  Request an *Application-only* authentication token.
+
+  With [Application-only] authentication you don’t have the context of an
+  authenticated user and this means that accessing APIs that require user context, will not work.
 
   Returns `{:ok, token}` if the request is successful, `{:error, reason}` otherwise.
 
-  With [Application-only authentication] you don’t have the context of an
-  authenticated user and this means that any request to API for endpoints that
-  require user context, such as posting tweets, will not work.
-
-  [Application-only authentication]: https://dev.twitter.com/oauth/application-only
+  [Application-only]: https://dev.twitter.com/oauth/application-only
   """
   @spec get_token(Keyword.t) :: {:ok, OAuth2.AccessToken.t} | {:error, OAuth2.Error.t}
   def get_token(options \\ []) do
