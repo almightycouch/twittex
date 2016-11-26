@@ -15,7 +15,7 @@
   "oauth2": {:hex, :oauth2, "0.8.0", "9650476a695a22c75fa9a0a8fed8094a135ba1972a7f421450e9b10cba3547dd", [:mix], [{:hackney, "~> 1.6", [hex: :hackney, optional: false]}]},
   "oauther": {:hex, :oauther, "1.1.0", "c9a56e200507ce64e069f5273143db0cddd7904cd5d1fe46920388a48f22441b", [:mix], []},
   "poison": {:hex, :poison, "3.0.0", "625ebd64d33ae2e65201c2c14d6c85c27cc8b68f2d0dd37828fde9c6920dd131", [:mix], []},
-  "simple_bayes": {:hex, :simple_bayes, "0.11.0", "b05cfbfc799256be5e26916b84348eafe2daa5587ca2270deec0a5b9e9e600c2", [:mix], [{:decimal, ">= 0.0.0", [hex: :decimal, optional: false]}, {:math, ">= 0.0.0", [hex: :math, optional: false]}]},
+  "poolboy": {:hex, :poolboy, "1.5.1", "6b46163901cfd0a1b43d692657ed9d7e599853b3b21b95ae5ae0a777cf9b6ca8", [:rebar], []},
   "ssl_verify_fun": {:hex, :ssl_verify_fun, "1.1.1", "28a4d65b7f59893bc2c7de786dec1e1555bd742d336043fe644ae956c3497fbe", [:make, :rebar], []},
   "ssl_verify_hostname": {:hex, :ssl_verify_hostname, "1.0.5"},
   "stemmer": {:hex, :stemmer, "1.0.1", "9a8dd7824caf0980c2289678f2d94e526d072cb2048744b3956a5fbe41bd56e7", [:mix], []},

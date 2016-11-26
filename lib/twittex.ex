@@ -7,7 +7,7 @@ defmodule Twittex do
     import Supervisor.Spec, warn: false
 
     children = [
-      worker(Twittex.Client, [])
+      Twittex.Client.child_spec
     ]
 
     opts = [strategy: :one_for_one, name: Twittex.Supervisor]

@@ -13,18 +13,17 @@ defmodule Twittex.Client.Base do
         use Twittex.Client.Base
 
         def search(term, options \\ []) do
-          get "/search/tweets.json?" <> URI.encode_query(Dict.merge(%{q: term}, options))
+          get "/search/tweets.json?" <> URI.encode_query(Keyword.merge(%{q: term}, options))
         end
       end
 
-  This client works as a singleton and can be added to a supervisor tree:
+  This client works as a *singleton* and can be added to a supervisor tree:
 
-      worker(TwitterBot, [])
+      Supervisor.start_link([TwittexBot.child_spec], strategy: :one_for_one)
 
   And here's how you may use it:
 
-      iex> TwitterBot.search "#myelixirstatus", count: 3
-      {:ok, %{}}
+      TwitterBot.search "#myelixirstatus", count: 3
   """
 
   alias Twittex.API
@@ -33,14 +32,14 @@ defmodule Twittex.Client.Base do
   use GenServer
 
   @doc """
-  Starts the process as part of a supervision tree.
+  Starts the process as part of a supervisor tree.
 
   ## Options
 
   * `:username` - Twitter username or email address
   * `:password` - Twitter password
 
-  Other options are passed to `GenServer._start_link/1`.
+  Further options are passed to `GenServer.start_link/1`.
   """
   @spec start_link(Keyword.t) :: GenServer.on_start
   def start_link(options \\ []) do
@@ -157,39 +156,124 @@ defmodule Twittex.Client.Base do
     end
   end
 
-  @doc false
-  defmacro __using__(_options) do
-    quote do
-      @doc """
-      Starts the process as part of a supervision tree.
-      """
-      @spec start_link(Keyword.t) :: GenServer.on_start
-      def start_link(options \\ []) do
-        Twittex.Client.Base.start_link(Dict.put_new(options, :name, __MODULE__))
+  @doc """
+  Generates a *singleton* Twitter client.
+
+  ## Options
+
+  * `:pool` - Use pool of clients (default: `false`)
+
+  It generates `get/3`, `post/4`, `stage/5` and their `!` counterparts so you don't have to care about authentication.
+  Here's, a very basic example:
+
+      defmodule TwitterBot do
+        use Twittex.Client.Base
+
+        def search(term, options \\ []) do
+          get "/search/tweets.json?" <> URI.encode_query(Keyword.merge(%{q: term}, options))
+        end
       end
 
-      defp get(url, headers \\ [], options \\ []) do
-        Twittex.Client.Base.get(__MODULE__, url, headers, options)
-      end
+  Note that the generated `child_spec/1` helper function can be used to start the client as part of a supervisor tree.
+  """
+  defmacro __using__(options) do
+    if Keyword.get(options, :pool) do
+      quote do
+        @doc """
+        Returns the childspec that starts the client pool.
+        """
+        @spec child_spec(Keyword.t) :: Supervisor.Spec.spec
+        def child_spec(options \\ []) do
+          pool_options = [
+            name: {:local, __MODULE__},
+            worker_module: __MODULE__,
+            size: 5,
+            max_overflow: 10
+          ]
+          :poolboy.child_spec(__MODULE__, pool_options, options)
+        end
 
-      defp get!(url, headers \\ [], options \\ []) do
-        Twittex.Client.Base.get!(__MODULE__, url, headers, options)
-      end
+        @doc false
+        def start_link(options \\ []) do
+          Twittex.Client.Base.start_link(options)
+        end
 
-      defp post(url, body \\ [], headers \\ [], options \\ []) do
-        Twittex.Client.Base.post(__MODULE__, url, body, headers, options)
-      end
+        defp get(url, headers \\ [], options \\ []) do
+          :poolboy.transaction(__MODULE__, fn client ->
+            Twittex.Client.Base.get(client, url, headers, options)
+          end)
+        end
 
-      defp post!(url, body \\ [], headers \\ [], options \\ []) do
-        Twittex.Client.Base.post!(__MODULE__, url, body, headers, options)
-      end
+        defp get!(url, headers \\ [], options \\ []) do
+          :poolboy.transaction(__MODULE__, fn client ->
+            Twittex.Client.Base.get!(client, url, headers, options)
+          end)
+        end
 
-      defp stage(method, url, body \\ [], headers \\ [], options \\ []) do
-        Twittex.Client.Base.stage(__MODULE__, method, url, body, headers, options)
-      end
+        defp post(url, body \\ [], headers \\ [], options \\ []) do
+          :poolboy.transaction(__MODULE__, fn client ->
+            Twittex.Client.Base.post(client, url, headers, options)
+          end)
+        end
 
-      defp stage!(method, url, body \\ [], headers \\ [], options \\ []) do
-        Twittex.Client.Base.stage!(__MODULE__, method, url, body, headers, options)
+        defp post!(url, body \\ [], headers \\ [], options \\ []) do
+          :poolboy.transaction(__MODULE__, fn client ->
+            Twittex.Client.Base.post!(client, url, headers, options)
+          end)
+        end
+
+        defp stage(method, url, body \\ [], headers \\ [], options \\ []) do
+          :poolboy.transaction(__MODULE__, fn client ->
+            Twittex.Client.Base.stage(client, url, headers, options)
+          end)
+        end
+
+        defp stage!(method, url, body \\ [], headers \\ [], options \\ []) do
+          :poolboy.transaction(__MODULE__, fn client ->
+            Twittex.Client.Base.stage!(client, url, headers, options)
+          end)
+        end
+      end
+    else
+      quote do
+        @doc """
+        Returns the childspec that starts the client process.
+        """
+        @spec child_spec(Keyword.t) :: Supervisor.Spec.spec
+        def child_spec(options \\ []) do
+          import Supervisor.Spec
+          options = Keyword.put(options, :name, __MODULE__)
+          worker(__MODULE__, [options])
+        end
+
+        @doc false
+        def start_link(options \\ []) do
+          Twittex.Client.Base.start_link(options)
+        end
+
+        defp get(url, headers \\ [], options \\ []) do
+          Twittex.Client.Base.get(__MODULE__, url, headers, options)
+        end
+
+        defp get!(url, headers \\ [], options \\ []) do
+          Twittex.Client.Base.get!(__MODULE__, url, headers, options)
+        end
+
+        defp post(url, body \\ [], headers \\ [], options \\ []) do
+          Twittex.Client.Base.post(__MODULE__, url, body, headers, options)
+        end
+
+        defp post!(url, body \\ [], headers \\ [], options \\ []) do
+          Twittex.Client.Base.post!(__MODULE__, url, body, headers, options)
+        end
+
+        defp stage(method, url, body \\ [], headers \\ [], options \\ []) do
+          Twittex.Client.Base.stage(__MODULE__, method, url, body, headers, options)
+        end
+
+        defp stage!(method, url, body \\ [], headers \\ [], options \\ []) do
+          Twittex.Client.Base.stage!(__MODULE__, method, url, body, headers, options)
+        end
       end
     end
   end
