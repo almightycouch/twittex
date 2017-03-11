@@ -23,7 +23,7 @@ defmodule Twittex.Client do
   """
   @spec search(String.t, Keyword.t) :: {:ok, %{}} | {:error, HTTPoison.Error.t}
   def search(query, options \\ []) do
-    get "/search/tweets.json?" <> URI.encode_query(Dict.merge(%{q: query}, options))
+    get "/search/tweets.json?" <> URI.encode_query(%{q: query} |> Enum.into(options))
   end
 
   @doc """
@@ -32,7 +32,7 @@ defmodule Twittex.Client do
   """
   @spec search!(String.t, Keyword.t) :: %{}
   def search!(query, options \\ []) do
-    get! "/search/tweets.json?" <> URI.encode_query(Dict.merge(%{q: query}, options))
+    get! "/search/tweets.json?" <> URI.encode_query(%{q: query} |> Enum.into(options))
   end
 
   @doc """
@@ -59,7 +59,7 @@ defmodule Twittex.Client do
   """
   @spec user_timeline(String.t, Keyword.t) :: {:ok, %{}} | {:error, HTTPoison.Error.t}
   def user_timeline(screen_name, options \\ []) do
-    get "/statuses/user_timeline.json?" <> URI.encode_query(Dict.merge(%{screen_name: screen_name}, options))
+    get "/statuses/user_timeline.json?" <> URI.encode_query(%{screen_name: screen_name} |> Enum.into(options))
   end
 
   @doc """
@@ -68,7 +68,7 @@ defmodule Twittex.Client do
   """
   @spec user_timeline!(String.t, Keyword.t) :: %{}
   def user_timeline!(screen_name, options \\ []) do
-    get! "/statuses/user_timeline.json?" <> URI.encode_query(Dict.merge(%{screen_name: screen_name}, options))
+    get! "/statuses/user_timeline.json?" <> URI.encode_query(%{screen_name: screen_name} |> Enum.into(options))
   end
 
   @doc """
@@ -127,9 +127,9 @@ defmodule Twittex.Client do
 
     url =
       case query do
-        :user   -> "https://userstream.twitter.com/1.1/user.json?" <> URI.encode_query(Dict.merge(%{delimited: "length"}, options))
-        :sample -> "https://stream.twitter.com/1.1/statuses/sample.json?" <> URI.encode_query(Dict.merge(%{delimited: "length"}, options))
-        _       -> "https://stream.twitter.com/1.1/statuses/filter.json?" <> URI.encode_query(Dict.merge(%{track: query, delimited: "length"}, options))
+        :user   -> "https://userstream.twitter.com/1.1/user.json?" <> URI.encode_query(%{delimited: "length"} |> Enum.into(options))
+        :sample -> "https://stream.twitter.com/1.1/statuses/sample.json?" <> URI.encode_query(%{delimited: "length"} |> Enum.into(options))
+        _       -> "https://stream.twitter.com/1.1/statuses/filter.json?" <> URI.encode_query(%{track: query, delimited: "length"} |> Enum.into(options))
       end
 
     case stage :post, url do
