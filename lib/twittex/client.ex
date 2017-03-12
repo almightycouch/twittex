@@ -16,8 +16,6 @@ defmodule Twittex.Client do
   """
   use Twittex.Client.Base
 
-  alias Experimental.GenStage
-
   @doc """
   Returns a collection of relevant Tweets matching the given `query`.
   """

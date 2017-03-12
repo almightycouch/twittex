@@ -120,12 +120,7 @@ defmodule Twittex.API do
     # request bearer token
     case OAuth2.Client.get_token(client, [], [], options) do
       {:ok, %OAuth2.Client{token: token}} ->
-        token =
-          token
-          |> Map.fetch!(:access_token)
-          |> Poison.decode!()
-          |> OAuth2.AccessToken.new()
-        {:ok, token}
+        {:ok, OAuth2.AccessToken.new(token.access_token)}
       {:error, error} ->
         {:error, error}
     end
