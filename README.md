@@ -16,19 +16,11 @@ See the [online documentation](https://hexdocs.pm/twittex/) for more information
 
 ## Installation
 
-Add Twittex to your list of dependencies in `mix.exs`:
+Add `:twittex` to your list of dependencies in `mix.exs`:
 
 ```elixir
 def deps do
   [{:twittex, "~> 0.2"}]
-end
-```
-
-Ensure Twittex is started before your application:
-
-```elixir
-def application do
-  [applications: [:twittex]]
 end
 ```
 
