@@ -6,7 +6,7 @@
 [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/almightycouch/twittex/master/LICENSE)
 [![Github Issues](https://img.shields.io/github/issues/almightycouch/twittex.svg)](http://github.com/almightycouch/twittex/issues)
 
-![Cover image](http://fs5.directupload.net/images/170405/pdohhvec.jpg)
+![Cover image](http://imgur.com/GYiXHUN.jpg)
 
 Twitter client library for Elixir.
 
