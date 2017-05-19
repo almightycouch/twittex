@@ -28,8 +28,12 @@ defmodule Twittex.Client.Base do
 
   alias Twittex.API
   alias Twittex.Client.Stream
+  alias OAuther, as: OAuth1
 
   use GenServer
+
+  @api_key Application.get_env(:twittex, :consumer_key)
+  @api_secret Application.get_env(:twittex, :consumer_secret)
 
   @doc """
   Starts the process as part of a supervisor tree.
@@ -38,6 +42,8 @@ defmodule Twittex.Client.Base do
 
   * `:username` - Twitter username or email address
   * `:password` - Twitter password
+  * `:access_token` - Twitter access token from dev.twitter.com
+  * `:access_token_secrect` - Twitter access token secret from dev.twitter.com
 
   Further options are passed to `GenServer.start_link/1`.
   """
@@ -45,11 +51,13 @@ defmodule Twittex.Client.Base do
   def start_link(options \\ []) do
     {username, options} = Keyword.pop(options, :username, Application.get_env(:twittex, :username))
     {password, options} = Keyword.pop(options, :password, Application.get_env(:twittex, :password))
+    {access_token, options} = Keyword.pop(options, :access_token, Application.get_env(:twittex, :access_token))
+    {access_token_secrect, options} = Keyword.pop(options, :access_token, Application.get_env(:twittex, :access_token_secrect))
 
-    if username && password do
-      GenServer.start_link(__MODULE__, {username, password}, options)
-    else
-      GenServer.start_link(__MODULE__, nil, options)
+    cond do
+        access_token && access_token_secrect -> GenServer.start_link(__MODULE__, %{:access_token => access_token, :access_token_secrect => access_token_secrect}, options)
+        username && password -> GenServer.start_link(__MODULE__, {username, password}, options)
+        true -> GenServer.start_link(__MODULE__, nil, options)
     end
   end
 
@@ -139,6 +147,11 @@ defmodule Twittex.Client.Base do
       {:ok, token} -> {:ok, token}
       {:error, error} -> {:stop, error.reason}
     end
+  end
+
+  def init(tokens) when is_map(tokens) do
+    token = OAuth1.credentials(consumer_key: @api_key, consumer_secret: @api_secret, token: tokens[:access_token], token_secret: tokens[:access_token_secrect])
+    {:ok, token}
   end
 
   def init({username, password}) do
