@@ -58,6 +58,8 @@ defmodule Twittex.Client.Stream do
       state.buffer_size == 0 ->
         :hackney.stream_next(state.ref)
         case String.split(chunk, "\r\n", parts: 2) do
+          ["", chunk] ->
+            {:noreply, [], %__MODULE__{state | buffer: chunk, buffer_size: 0 - byte_size(chunk)}}
           [size, chunk] ->
             {:noreply, [], %__MODULE__{state | buffer: chunk, buffer_size: String.to_integer(size) - byte_size(chunk)}}
           _ ->
