@@ -2,8 +2,8 @@ defmodule Twittex.Client.Base do
   @moduledoc """
   A behaviour module for implementing your own Twitter client.
 
-  It implements the `GenServer` behaviour, authenticates when starting and keeps
-  the authentication token in it state during the entire process livetime.
+  Provides convenience functions for working with Twitter's RESTful API. You can
+  use `get/3` and `post/4`using a relative url pointing to the API endpoint.
 
   ## Example
 
@@ -24,32 +24,116 @@ defmodule Twittex.Client.Base do
   And here's how you may use it:
 
       TwitterBot.search "#myelixirstatus", count: 3
+
+  ## Authentication
+
+  Twittex supports following OAuth authentication methods:
+
+  * [application-only] authentication.
+  * [owner-token] from [dev.twitter.com](https://dev.twitter.com/oauth/overview/application-owner-access-tokens).
+
+  To request an access token with one of the method listed above. See `get_token/1`
+  and `get_token/3`. Here's, a brief example for *application-only* authentication:
+
+      iex> token = Twittex.Client.Base.get_token!
+      %OAuth2.AccessToken{...}
+
+  Under the hood, the `Twittex.Client.Base` module uses `HTTPoison.Base` and overrides the
+  `request/5` method to pass the authentication headers along the request.
+
+  [owner-token]: https://dev.twitter.com/oauth/overview/application-owner-access-tokens
+  [application-only]: https://dev.twitter.com/oauth/application-only
   """
 
   alias Twittex.API
   alias Twittex.Client.Stream
 
+  alias OAuther, as: OAuth1
+
   use GenServer
+
+  @api_key Application.get_env(:twittex, :consumer_key)
+  @api_secret Application.get_env(:twittex, :consumer_secret)
 
   @doc """
   Starts the process as part of a supervisor tree.
 
   ## Options
 
-  * `:username` - Twitter username or email address
-  * `:password` - Twitter password
+  * `:token` -- Access token
+  * `:token_secret` -- Access token secret
 
   Further options are passed to `GenServer.start_link/1`.
   """
   @spec start_link(Keyword.t) :: GenServer.on_start
   def start_link(options \\ []) do
-    {username, options} = Keyword.pop(options, :username, Application.get_env(:twittex, :username))
-    {password, options} = Keyword.pop(options, :password, Application.get_env(:twittex, :password))
+    {token, options} = Keyword.pop(options, :token, Application.get_env(:twittex, :token))
+    {token_secret, options} = Keyword.pop(options, :token_secret, Application.get_env(:twittex, :token_secret))
 
-    if username && password do
-      GenServer.start_link(__MODULE__, {username, password}, options)
+    if token && token_secret do
+      GenServer.start_link(__MODULE__, {token, token_secret}, options)
     else
       GenServer.start_link(__MODULE__, nil, options)
+    end
+  end
+
+  @doc """
+  Returns a OAuth1 token for the given `token` and `token_secret`.
+  """
+  @spec get_token(String.t, String.t, Keyword.t) :: {:ok, OAuth1.Credentials.t} | {:error, HTTPoison.Error.t}
+  def get_token(token, token_secret, _options \\ []) do
+    token = OAuth1.credentials(consumer_key: @api_key, consumer_secret: @api_secret, token: token, token_secret: token_secret)
+    {:ok, token}
+  end
+
+  @doc """
+  Same as `get_token/3` but raises `HTTPoison.Error` if an error occurs during the request.
+  """
+  @spec get_token!(String.t, String.t, Keyword.t) :: OAuth1.Credentials.t
+  def get_token!(token, token_secret, options \\ []) do
+    case get_token(token, token_secret, options) do
+      {:ok, token} -> token
+      {:error, error} -> raise error
+    end
+  end
+
+  @doc """
+  Returns a OAuth2 *application-only* token.
+
+  With [application-only] authentication you don’t have the context of an
+  authenticated user and this means that accessing APIs that require user context, will not work.
+
+  [application-only]: https://dev.twitter.com/oauth/application-only
+  """
+  @spec get_token(Keyword.t) :: {:ok, OAuth2.AccessToken.t} | {:error, OAuth2.Error.t}
+  def get_token(options \\ []) do
+    # build basic OAuth2 client credentials
+    client = OAuth2.Client.new([
+      strategy: OAuth2.Strategy.ClientCredentials,
+      client_id: @api_key,
+      client_secret: @api_secret,
+      site: API.api_url,
+      token_url: "/oauth2/token",
+    ])
+
+    # request bearer token
+    case OAuth2.Client.get_token(client, [], [], options) do
+      {:ok, %OAuth2.Client{token: token}} ->
+        {:ok, OAuth2.AccessToken.new(token.access_token)}
+      {:error, error} ->
+        {:error, error}
+    end
+  end
+
+  @doc """
+  Same as `get_token/1` but raises `OAuth2.Error` if an error occurs during the
+  request.
+  """
+  @spec get_token!(Keyword.t) :: OAuth2.AccessToken.t
+  def get_token!(options \\ []) do
+    case get_token(options) do
+      {:ok, token} -> token
+      {:error, error} -> raise error
     end
   end
 
@@ -58,10 +142,8 @@ defmodule Twittex.Client.Base do
 
   Returns `{:ok, response}` if the request is successful, `{:error, reason}`
   otherwise.
-
-  See `Twittex.API.request/5` for more detailed information.
   """
-  @spec get(pid, String.t, API.headers, Keyword.t) :: {:ok, %{}} | {:error, HTTPoison.Error.t}
+  @spec get(pid, String.t, List.t, Keyword.t) :: {:ok, %{}} | {:error, HTTPoison.Error.t}
   def get(pid, url, headers \\ [], options \\ []) do
     GenServer.call(pid, {:get, url, "", headers, options})
   end
@@ -70,7 +152,7 @@ defmodule Twittex.Client.Base do
   Same as `get/4` but raises `HTTPoison.Error` if an error occurs during the
   request.
   """
-  @spec get!(pid, String.t, API.headers, Keyword.t) :: %{}
+  @spec get!(pid, String.t, List.t, Keyword.t) :: %{}
   def get!(pid, url, headers \\ [], options \\ []) do
     case get(pid, url, headers, options) do
       {:ok, result} -> result
@@ -86,7 +168,7 @@ defmodule Twittex.Client.Base do
 
   See `Twittex.API.request/5` for more detailed information.
   """
-  @spec post(pid, String.t, binary, API.headers, Keyword.t) :: {:ok, %{}} | {:error, HTTPoison.Error.t}
+  @spec post(pid, String.t, binary, List.t, Keyword.t) :: {:ok, %{}} | {:error, HTTPoison.Error.t}
   def post(pid, url, body \\ [], headers \\ [], options \\ []) do
     GenServer.call(pid, {:post, url, body, headers, options})
   end
@@ -95,7 +177,7 @@ defmodule Twittex.Client.Base do
   Same as `post/5` but raises `HTTPoison.Error` if an error occurs during the
   request.
   """
-  @spec post!(pid, String.t, binary, API.headers, Keyword.t) :: %{}
+  @spec post!(pid, String.t, binary, List.t, Keyword.t) :: %{}
   def post!(pid, url, body, headers \\ [], options \\ []) do
     case post(pid, url, body, headers, options) do
       {:ok, result} -> result
@@ -109,7 +191,7 @@ defmodule Twittex.Client.Base do
   Returns `{:ok, stage}` if the request is successful, `{:error, reason}`
   otherwise.
   """
-  @spec stage(pid, Atom.t, String.t, binary, API.headers, Keyword.t) :: {:ok, Stream.t} | {:error, HTTPoison.Error.t}
+  @spec stage(pid, Atom.t, String.t, binary, List.t, Keyword.t) :: {:ok, Stream.t} | {:error, HTTPoison.Error.t}
   def stage(pid, method, url, body \\ [], headers \\ [], options \\ []) do
     {:ok, stage} = Stream.start_link()
     options = Keyword.merge(options, hackney: [stream_to: stage, async: :once], recv_timeout: :infinity)
@@ -117,7 +199,7 @@ defmodule Twittex.Client.Base do
       {:ok, %HTTPoison.AsyncResponse{}} ->
         {:ok, stage}
       {:error, error} ->
-        Stream.stop(stage)
+        GenStage.stop(stage)
         {:error, error}
     end
   end
@@ -126,7 +208,7 @@ defmodule Twittex.Client.Base do
   Same as `stage/6` but raises `HTTPoison.Error` if an error occurs during the
   request.
   """
-  @spec stage!(pid, Atom.t, String.t, binary, API.headers, Keyword.t) :: Stream.t
+  @spec stage!(pid, Atom.t, String.t, binary, List.t, Keyword.t) :: Stream.t
   def stage!(pid, method, url, body \\ [], headers \\ [], options \\ []) do
     case stage(pid, method, url, body, headers, options) do
       {:ok, result} -> result
@@ -135,14 +217,14 @@ defmodule Twittex.Client.Base do
   end
 
   def init(nil) do
-    case API.get_token() do
+    case get_token() do
       {:ok, token} -> {:ok, token}
       {:error, error} -> {:stop, error.reason}
     end
   end
 
-  def init({username, password}) do
-    case API.get_token(username, password) do
+  def init({token, secret}) do
+    case get_token(token, secret) do
       {:ok, token} -> {:ok, token}
       {:error, error} -> {:stop, error.reason}
     end
@@ -156,26 +238,6 @@ defmodule Twittex.Client.Base do
     end
   end
 
-  @doc """
-  Generates a *singleton* Twitter client.
-
-  ## Options
-
-  * `:pool` - Use pool of clients (default: `false`)
-
-  It generates `get/3`, `post/4`, `stage/5` and their `!` counterparts so you don't have to care about authentication.
-  Here's, a very basic example:
-
-      defmodule TwitterBot do
-        use Twittex.Client.Base
-
-        def search(term, options \\ []) do
-          get "/search/tweets.json?" <> URI.encode_query(Keyword.merge(%{q: term}, options))
-        end
-      end
-
-  Note that the generated `child_spec/1` helper function can be used to start the client as part of a supervisor tree.
-  """
   defmacro __using__(options) do
     if Keyword.get(options, :pool) do
       quote do

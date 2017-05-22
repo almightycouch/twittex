@@ -11,7 +11,7 @@ defmodule Twittex.Client do
   Twitter.Client.search! "#myelixirstatus"
   ```
 
-  Read the `Twittex.API` documentation for more details on how authentication is implemented.
+  Read the `Twittex.Client.Base` documentation for more details on how authentication is implemented.
 
   """
   use Twittex.Client.Base

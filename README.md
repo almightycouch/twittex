@@ -30,8 +30,8 @@ Add your app's `consumer_key` and `consumer_secret` to `config/config.exs`:
 
 ```elixir
 config :twittex,
-  consumer_key: "3rJOl1ODzm9yZy63FACdg",
-  consumer_secret: "5jPoQ5kQvMJFDYRNE8bQ4rHuds4xJqhvgNJM4awaE8"
+  consumer_key: "xxxxxx",
+  consumer_secret: "xxxxxx"
 ```
 
 ## Usage
@@ -40,14 +40,14 @@ Returns a collection of relevant Tweets matching `#myelixirstatus`:
 
 ```elixir
 iex> Twittex.Client.search "#myelixirstatus"
-{:ok, %{}}
+{:ok, %{...}}
 ```
 
 Same a the previous example but returns the last 50 Tweets (instead of 15):
 
 ```elixir
 iex> Twittex.Client.search "#myelixirstatus", count: 50
-{:ok, %{}}
+{:ok, %{...}}
 ```
 
 Returns a collection of the most recent Tweets and retweets posted by the
@@ -55,25 +55,24 @@ authenticating user and the users they follow:
 
 ```elixir
 iex> Twittex.Client.home_timeline
-{:ok, %{}}
+{:ok, %{...}}
 ```
 
 Returns a stream that consume Tweets from public data flowing through Twitter:
 
 ```elixir
 iex> {:ok, stream} = Twittex.Client.stream "#myelixirstatus"
-{:ok, stream}
+{:ok, #Function<51.48026477/2 in Stream.resource/3>}
 iex> Enum.each stream, &IO.inspect/1
+:ok
 ```
 
 ## Authentication
 
-Twittex supports both *Application-only* and user-credentials (*xAuth*) authentication
+Twittex supports both *application-only* and *owner-token* authentication
 methods.
 
-You should read the Twitter [OAuth](https://dev.twitter.com/oauth) documentation for more details.
-
-Using *Application-only* authentication, your app will be able to, for example:
+Using *application-only* authentication, your app will be able to, for example:
 
 * Pull user timelines;
 * Access friends and followers of any account;
@@ -89,15 +88,13 @@ And it won’t be able to:
 * Use any geo endpoint;
 * Access DMs or account credentials;
 
-In order to have the context of an authenticated user and access restricted
-endpoints and features you cannot access with the former method, you will have
-to use the *xAuth* extension.
+In order to access restricted endpoints and features you cannot access with the former method,
+you will have to use authenticate with your *owner-token* from [dev.twitter.com](https://dev.twitter.com/oauth/overview/application-owner-access-tokens).
 
-To do so, simply add your credentials to your application config file:
+To do so, simply add your access token to your application config file:
 
 ```elixir
 config :twittex,
-  # consumer key and secret
-  username: "myusername",
-  password: "mypassword"
+  token: "xxxxxx",
+  token_secret: "xxxxxx"
 ```

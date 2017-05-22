@@ -1,8 +1,6 @@
 defmodule Twittex.Client.Stream do
   @moduledoc """
-  Twitter streaming `GenStage` with back-pressure cababilities.
-
-  See `Twittex.Client.Base.stage/6` and `Twittex.Client.stream/2` for more details.
+  Twitter streaming stage with back-pressure cababilities.
   """
 
   use GenStage
@@ -10,19 +8,12 @@ defmodule Twittex.Client.Stream do
   defstruct ref: nil, demand: 0, buffer: "", buffer_size: 0
 
   @doc """
-  Starts the stage as part of a supervision tree.
+  Starts a stage as part of a supervision tree.
   """
   @spec start_link(Keyword.t) :: GenServer.on_start
   def start_link(options \\ []) do
     GenStage.start_link(__MODULE__, [], options)
   end
-
-  @doc """
-  Stops the stage with the given reason.
-
-  See `GenStage.stop/3` for more information.
-  """
-  defdelegate stop(stage, reason \\ :normal, timeout \\ :infinity), to: GenStage
 
   #
   # Callbacks
