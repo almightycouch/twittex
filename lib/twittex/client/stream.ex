@@ -1,7 +1,5 @@
 defmodule Twittex.Client.Stream do
-  @moduledoc """
-  Twitter streaming stage with back-pressure cababilities.
-  """
+  @moduledoc false
 
   use GenStage
 

@@ -55,17 +55,7 @@ defmodule Twittex.Client.Base do
   @api_key Application.get_env(:twittex, :consumer_key)
   @api_secret Application.get_env(:twittex, :consumer_secret)
 
-  @doc """
-  Starts the process as part of a supervisor tree.
-
-  ## Options
-
-  * `:token` -- Access token
-  * `:token_secret` -- Access token secret
-
-  Further options are passed to `GenServer.start_link/1`.
-  """
-  @spec start_link(Keyword.t) :: GenServer.on_start
+  @doc false
   def start_link(options \\ []) do
     {token, options} = Keyword.pop(options, :token, Application.get_env(:twittex, :token))
     {token_secret, options} = Keyword.pop(options, :token_secret, Application.get_env(:twittex, :token_secret))
@@ -162,11 +152,6 @@ defmodule Twittex.Client.Base do
 
   @doc """
   Issues a POST request to the given url.
-
-  Returns `{:ok, response}` if the request is successful, `{:error, reason}`
-  otherwise.
-
-  See `Twittex.API.request/5` for more detailed information.
   """
   @spec post(pid, String.t, binary, List.t, Keyword.t) :: {:ok, %{}} | {:error, HTTPoison.Error.t}
   def post(pid, url, body \\ [], headers \\ [], options \\ []) do
@@ -174,8 +159,7 @@ defmodule Twittex.Client.Base do
   end
 
   @doc """
-  Same as `post/5` but raises `HTTPoison.Error` if an error occurs during the
-  request.
+  Same as `post/5` but raises `HTTPoison.Error` if an error occurs during the request.
   """
   @spec post!(pid, String.t, binary, List.t, Keyword.t) :: %{}
   def post!(pid, url, body, headers \\ [], options \\ []) do
@@ -187,11 +171,8 @@ defmodule Twittex.Client.Base do
 
   @doc """
   Streams data from the given url.
-
-  Returns `{:ok, stage}` if the request is successful, `{:error, reason}`
-  otherwise.
   """
-  @spec stage(pid, Atom.t, String.t, binary, List.t, Keyword.t) :: {:ok, Stream.t} | {:error, HTTPoison.Error.t}
+  @spec stage(pid, Atom.t, String.t, binary, List.t, Keyword.t) :: {:ok, GenStage.t} | {:error, HTTPoison.Error.t}
   def stage(pid, method, url, body \\ [], headers \\ [], options \\ []) do
     {:ok, stage} = Stream.start_link()
     options = Keyword.merge(options, hackney: [stream_to: stage, async: :once], recv_timeout: :infinity)
@@ -205,8 +186,7 @@ defmodule Twittex.Client.Base do
   end
 
   @doc """
-  Same as `stage/6` but raises `HTTPoison.Error` if an error occurs during the
-  request.
+  Same as `stage/6` but raises `HTTPoison.Error` if an error occurs during the request.
   """
   @spec stage!(pid, Atom.t, String.t, binary, List.t, Keyword.t) :: Stream.t
   def stage!(pid, method, url, body \\ [], headers \\ [], options \\ []) do
@@ -215,6 +195,10 @@ defmodule Twittex.Client.Base do
       {:error, error} -> raise error
     end
   end
+
+  #
+  # Helpers
+  #
 
   def init(nil) do
     case get_token() do
@@ -237,6 +221,10 @@ defmodule Twittex.Client.Base do
       {:error, error} -> {:reply, {:error, error}, token}
     end
   end
+
+  #
+  # Macros
+  #
 
   defmacro __using__(options) do
     if Keyword.get(options, :pool) do
