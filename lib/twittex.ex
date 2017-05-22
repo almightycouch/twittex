@@ -1,16 +1,26 @@
 defmodule Twittex do
-  @moduledoc false
+  @moduledoc """
+  Twitter client with OAuth1 and OAuth2 support.
+  """
 
-  use Application
+  defdelegate home_timeline(options \\ []), to: Twittex.Client
+  defdelegate home_timeline!(options \\ []), to: Twittex.Client
 
-  def start(_type, _args) do
-    import Supervisor.Spec, warn: false
+  defdelegate mentions_timeline(options \\ []), to: Twittex.Client
+  defdelegate mentions_timeline!(options \\ []), to: Twittex.Client
 
-    children = [
-      Twittex.Client.child_spec
-    ]
+  defdelegate retweets_of_me(options \\ []), to: Twittex.Client
+  defdelegate retweets_of_me!(options \\ []), to: Twittex.Client
 
-    opts = [strategy: :one_for_one, name: Twittex.Supervisor]
-    Supervisor.start_link(children, opts)
-  end
+  defdelegate search(options \\ []), to: Twittex.Client
+  defdelegate search!(options \\ []), to: Twittex.Client
+
+  defdelegate stream(options \\ []), to: Twittex.Client
+  defdelegate stream!(options \\ []), to: Twittex.Client
+
+  defdelegate user_stream(options \\ []), to: Twittex.Client
+  defdelegate user_stream!(options \\ []), to: Twittex.Client
+
+  defdelegate user_timeline(options \\ []), to: Twittex.Client
+  defdelegate user_timeline!(options \\ []), to: Twittex.Client
 end

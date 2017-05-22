@@ -18,7 +18,7 @@ defmodule Twittex.Mixfile do
 
   def application do
     [extra_applications: [:logger],
-     mod: {Twittex, []}]
+     mod: {Twittex.Application, []}]
   end
 
   defp package do

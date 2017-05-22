@@ -22,7 +22,7 @@ Add `:twittex` to your list of dependencies in `mix.exs`:
 
 ```elixir
 def deps do
-  [{:twittex, "~> 0.2"}]
+  [{:twittex, "~> 0.3"}]
 end
 ```
 
@@ -39,14 +39,14 @@ config :twittex,
 Returns a collection of relevant Tweets matching `#myelixirstatus`:
 
 ```elixir
-iex> Twittex.Client.search "#myelixirstatus"
+iex> Twittex.search "#myelixirstatus"
 {:ok, %{...}}
 ```
 
 Same a the previous example but returns the last 50 Tweets (instead of 15):
 
 ```elixir
-iex> Twittex.Client.search "#myelixirstatus", count: 50
+iex> Twittex.search "#myelixirstatus", count: 50
 {:ok, %{...}}
 ```
 
@@ -54,14 +54,14 @@ Returns a collection of the most recent Tweets and retweets posted by the
 authenticating user and the users they follow:
 
 ```elixir
-iex> Twittex.Client.home_timeline
+iex> Twittex.home_timeline
 {:ok, %{...}}
 ```
 
 Returns a stream that consume Tweets from public data flowing through Twitter:
 
 ```elixir
-iex> {:ok, stream} = Twittex.Client.stream "#myelixirstatus"
+iex> {:ok, stream} = Twittex.stream "#myelixirstatus"
 {:ok, #Function<51.48026477/2 in Stream.resource/3>}
 iex> Enum.each stream, &IO.inspect/1
 :ok
