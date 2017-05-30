@@ -15,8 +15,8 @@ defmodule Twittex do
   defdelegate search(options \\ []), to: Twittex.Client
   defdelegate search!(options \\ []), to: Twittex.Client
 
-  defdelegate stream(options \\ []), to: Twittex.Client
-  defdelegate stream!(options \\ []), to: Twittex.Client
+  defdelegate stream(query \\ :sample, options \\ []), to: Twittex.Client
+  defdelegate stream!(query \\ :sample, options \\ []), to: Twittex.Client
 
   defdelegate user_stream(options \\ []), to: Twittex.Client
   defdelegate user_stream!(options \\ []), to: Twittex.Client
