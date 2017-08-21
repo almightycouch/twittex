@@ -108,16 +108,17 @@ defmodule Twittex.Client do
   * `:min_demand` - Minimum demand for this subscription.
   * `:max_demand` - Maximum demand for this subscription.
   """
-  @spec stream(String.t | :sample, Keyword.t) :: {:ok, Enumerable.t} | {:error, HTTPoison.Error.t}
+  @spec stream(String.t | :sample | :user | :filter, Keyword.t) :: {:ok, Enumerable.t} | {:error, HTTPoison.Error.t}
   def stream(query \\ :sample, options \\ []) do
     {bare_stage, options} = Keyword.pop options, :stage, false
     {min_demand, options} = Keyword.pop options, :min_demand, 500
     {max_demand, options} = Keyword.pop options, :max_demand, 1_000
-
+    
     url =
       case query do
         :user   -> "https://userstream.twitter.com/1.1/user.json?" <> URI.encode_query(%{delimited: "length"} |> Enum.into(options))
         :sample -> "https://stream.twitter.com/1.1/statuses/sample.json?" <> URI.encode_query(%{delimited: "length"} |> Enum.into(options))
+	:filter -> "https://stream.twitter.com/1.1/statuses/filter.json?" <> URI.encode_query(%{delimited: "length"} |> Enum.into(options))
         _       -> "https://stream.twitter.com/1.1/statuses/filter.json?" <> URI.encode_query(%{track: query, delimited: "length"} |> Enum.into(options))
       end
 
