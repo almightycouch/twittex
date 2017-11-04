@@ -52,9 +52,6 @@ defmodule Twittex.Client.Base do
 
   use GenServer
 
-  @api_key Application.get_env(:twittex, :consumer_key)
-  @api_secret Application.get_env(:twittex, :consumer_secret)
-
   @doc false
   def start_link(options \\ []) do
     {token, options} = Keyword.pop(options, :token, Application.get_env(:twittex, :token))
@@ -72,7 +69,7 @@ defmodule Twittex.Client.Base do
   """
   @spec get_token(String.t, String.t, Keyword.t) :: {:ok, OAuth1.Credentials.t} | {:error, HTTPoison.Error.t}
   def get_token(token, token_secret, _options \\ []) do
-    token = OAuth1.credentials(consumer_key: @api_key, consumer_secret: @api_secret, token: token, token_secret: token_secret)
+    token = OAuth1.credentials(consumer_key: api_key(), consumer_secret: api_secret(), token: token, token_secret: token_secret)
     {:ok, token}
   end
 
@@ -100,8 +97,8 @@ defmodule Twittex.Client.Base do
     # build basic OAuth2 client credentials
     client = OAuth2.Client.new([
       strategy: OAuth2.Strategy.ClientCredentials,
-      client_id: @api_key,
-      client_secret: @api_secret,
+      client_id: api_key(),
+      client_secret: api_secret(),
       site: API.api_url,
       token_url: "/oauth2/token",
     ])
@@ -197,7 +194,7 @@ defmodule Twittex.Client.Base do
   end
 
   #
-  # Helpers
+  # Callbacks
   #
 
   def init(nil) do
@@ -327,4 +324,18 @@ defmodule Twittex.Client.Base do
       end
     end
   end
+
+  #
+  # Helpers
+  #
+
+  defp api_key do
+    Application.fetch_env!(:twittex, :consumer_key)
+
+  end
+
+  defp api_secret do
+    Application.fetch_env!(:twittex, :consumer_secret)
+  end
+
 end
