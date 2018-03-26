@@ -271,13 +271,13 @@ defmodule Twittex.Client.Base do
 
         defp stage(method, url, body \\ [], headers \\ [], options \\ []) do
           :poolboy.transaction(__MODULE__, fn client ->
-            Twittex.Client.Base.stage(client, url, headers, options)
+            Twittex.Client.Base.stage(client, method, url, headers, options)
           end)
         end
 
         defp stage!(method, url, body \\ [], headers \\ [], options \\ []) do
           :poolboy.transaction(__MODULE__, fn client ->
-            Twittex.Client.Base.stage!(client, url, headers, options)
+            Twittex.Client.Base.stage!(client, method, url, headers, options)
           end)
         end
       end
