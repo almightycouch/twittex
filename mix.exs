@@ -41,11 +41,11 @@ defmodule Twittex.Mixfile do
 
   defp deps do
     [{:poison, "~> 3.1"},
-     {:httpoison, "~> 0.13"},
+     {:httpoison, "~> 1.0"},
      {:oauth2, "~> 0.9"},
      {:oauther, "~> 1.1"},
-     {:gen_stage, "~> 0.12"},
+     {:gen_stage, "~> 0.13"},
      {:poolboy, "~> 1.5"},
-     {:ex_doc, "~> 0.16", only: :dev, runtime: false}]
+     {:ex_doc, "~> 0.18", only: :dev, runtime: false}]
   end
 end
